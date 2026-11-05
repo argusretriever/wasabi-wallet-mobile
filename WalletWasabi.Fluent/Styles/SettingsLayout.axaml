@@ -1,0 +1,67 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="StackPanel.settingsLayout">
+    <Setter Property="Spacing" Value="15" />
+    <Setter Property="Margin" Value="0 0 15 0" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="Orientation" Value="Vertical" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > ToggleSwitch">
+    <Setter Property="Margin" Value="0 0 -12 0" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="OnContent" Value="{x:Null}" />
+    <Setter Property="OffContent" Value="{x:Null}" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > Button">
+    <Setter Property="HorizontalAlignment" Value="Right" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout TextBox">
+    <Setter Property="Width" Value="360" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > TextBlock">
+    <Setter Property="Margin" Value="0 8 20 0" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="(DockPanel.Dock)" Value="Left" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > Label">
+    <Setter Property="Margin" Value="0 8 0 0" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > StackPanel">
+    <Setter Property="Spacing" Value="6" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > ComboBox">
+    <Setter Property="DockPanel.Dock" Value="Right" />
+    <Setter Property="Width" Value="190" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > TextBox">
+    <Setter Property="DockPanel.Dock" Value="Right" />
+    <Setter Property="Width" Value="275" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > CurrencyEntryBox">
+    <Setter Property="DockPanel.Dock" Value="Right" />
+    <Setter Property="Width" Value="275" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > CurrencyEntryBox.hideValidations /template/ DataValidationErrors#PART_DataValidationErrors">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+  <Style Selector="StackPanel.settingsLayout > DockPanel > DockPanel">
+    <Setter Property="Dock" Value="Right" />
+    <Setter Property="Width" Value="275" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+  </Style>
+</Styles>
