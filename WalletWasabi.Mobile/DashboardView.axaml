@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="WalletWasabi.Mobile.DashboardView"
-             Background="#1F1F1F">
+             x:Class="WalletWasabi.Mobile.DashboardView" Background="#1F1F1F">
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="20,24" Spacing="16" MaxWidth="560">
       <Grid ColumnDefinitions="Auto,*">
@@ -11,64 +10,38 @@
                    FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
       </Grid>
       <Border Background="#333B24" CornerRadius="6" Padding="12">
-        <TextBlock Text="DESIGN PREVIEW · SAMPLE DATA" Foreground="#C7E99A"
-                   FontSize="11" TextWrapping="Wrap" />
+        <TextBlock Text="TESTNET4 · SESSION ONLY" Foreground="#C7E99A" FontSize="11" />
       </Border>
-      <TextBlock Text="Alice's Wallet" FontSize="23" FontWeight="SemiBold" />
+      <TextBlock Text="Testnet Wallet" FontSize="23" FontWeight="SemiBold" />
       <Border Classes="card">
         <StackPanel Spacing="10">
           <TextBlock Classes="caption" Text="BALANCE" />
-          <TextBlock Text="2.4076 9012 BTC" FontSize="27" FontWeight="SemiBold"
-                     TextWrapping="Wrap" />
-          <TextBlock Classes="caption" Text="Illustrative balance" />
+          <TextBlock Text="Not synchronized" FontSize="24" TextWrapping="Wrap" />
+          <TextBlock Classes="caption" Text="Network synchronization is pending." TextWrapping="Wrap" />
         </StackPanel>
       </Border>
-      <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-        <Border Classes="card">
-          <StackPanel Spacing="10">
-            <TextBlock Classes="caption" Text="PRIVACY PROGRESS" TextWrapping="Wrap" />
-            <TextBlock Text="17%" FontSize="25" FontWeight="SemiBold" />
-            <ProgressBar Value="17" Maximum="100" Foreground="#78AF00" Height="5" MinWidth="0" />
-            <TextBlock Classes="caption" Text="Sample privacy score" TextWrapping="Wrap" />
-          </StackPanel>
-        </Border>
-        <Border Grid.Column="1" Classes="card">
-          <StackPanel Spacing="10">
-            <TextBlock Classes="caption" Text="EXCHANGE RATE" TextWrapping="Wrap" />
-            <TextBlock Text="66 186 USD" FontSize="20" FontWeight="SemiBold"
-                       TextWrapping="Wrap" />
-            <TextBlock Classes="caption" Text="Sample rate" />
-          </StackPanel>
-        </Border>
-      </Grid>
       <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
         <Button Classes="action" Content="Send" Click="ShowSendStatus" />
         <Button Grid.Column="1" Classes="action" Content="Receive" Click="ShowReceiveStatus" />
       </Grid>
-      <TextBlock x:Name="ActionStatus" Text="Wallet integration is planned."
-                 Foreground="#B8CDA0" TextWrapping="Wrap"
-                 AutomationProperties.LiveSetting="Polite" />
-      <TextBlock Text="Transactions" FontSize="18" FontWeight="SemiBold" />
+      <TextBlock x:Name="ActionStatus" Text="Receiving address derived locally with Wasabi's key manager."
+                 Foreground="#B8CDA0" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
       <Border Classes="card">
-        <StackPanel Spacing="18">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="caption" Text="Apr 2, 2024" />
-            <TextBlock Grid.Column="1" Text="+0.0010 BTC" Foreground="#9CC45C" />
-          </Grid>
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="caption" Text="Jan 12, 2024" />
-            <TextBlock Grid.Column="1" Text="-0.0042 BTC" />
-          </Grid>
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="caption" Text="Nov 6, 2023" />
-            <TextBlock Grid.Column="1" Text="0.0000 BTC" />
-          </Grid>
+        <StackPanel Spacing="12">
+          <TextBlock Text="Receive testnet bitcoin" FontSize="18" FontWeight="SemiBold" />
+          <SelectableTextBlock x:Name="AddressDisplay" FontSize="16" TextWrapping="Wrap"
+                               AutomationProperties.Name="Testnet receiving address" />
+          <TextBlock Classes="caption" Text="TAPROOT · FIRST RECEIVING ADDRESS" TextWrapping="Wrap" />
+          <TextBlock x:Name="DerivationDisplay" Classes="caption" TextWrapping="Wrap" />
+          <TextBlock x:Name="FingerprintDisplay" Classes="caption" TextWrapping="Wrap" />
         </StackPanel>
       </Border>
       <Border Classes="card">
-        <TextBlock Text="Tor and CoinJoin integration is planned."
+        <TextBlock Text="This wallet is kept in memory for this session. Recover it with the same words and password after closing. Tor, CoinJoin, transaction history and signing integration are pending."
                    Foreground="#AAAAAA" TextWrapping="Wrap" />
       </Border>
+      <Button Content="Close wallet" Click="CloseWallet" HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center" MinHeight="48" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

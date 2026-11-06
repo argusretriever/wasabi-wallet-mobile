@@ -28,6 +28,7 @@
 		<ProjectReference Include="..\WalletWasabi.Fluent.Generators\WalletWasabi.Fluent.Generators.csproj" />
 		<ProjectReference Include="..\WalletWasabi.Fluent\WalletWasabi.Fluent.csproj" />
 		<ProjectReference Include="..\WalletWasabi\WalletWasabi.csproj" />
+		<ProjectReference Include="..\WalletWasabi.Mobile\WalletWasabi.Mobile.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

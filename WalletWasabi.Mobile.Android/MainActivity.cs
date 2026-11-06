@@ -2,6 +2,8 @@ using Android.App;
 using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
+using Android.OS;
+using Android.Views;
 
 namespace WalletWasabi.Mobile.Android;
 
@@ -12,6 +14,12 @@ namespace WalletWasabi.Mobile.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity<App>
 {
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        Window?.AddFlags(WindowManagerFlags.Secure);
+    }
+
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) =>
         base.CustomizeAppBuilder(builder).WithInterFont();
 }

@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WalletWasabi.Mobile.WalletSetupView" Background="#1F1F1F">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="20,24" Spacing="16" MaxWidth="560">
+      <Grid ColumnDefinitions="Auto,*">
+        <Image Source="/Assets/WasabiLogo.png" Width="32" Height="32" />
+        <TextBlock Grid.Column="1" Text="Wasabi Wallet" Margin="12,0,0,0"
+                   FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+      </Grid>
+      <TextBlock Text="Testnet wallet" FontSize="24" FontWeight="SemiBold" />
+      <Border Classes="card">
+        <TextBlock Text="TESTNET4 · SESSION ONLY&#10;This development wallet stays in memory. Save your recovery phrase and exact password to recover it after closing the app. Balance sync and payments are pending."
+                   TextWrapping="Wrap" Foreground="#C7E99A" />
+      </Border>
+      <StackPanel x:Name="SetupForm" Spacing="12">
+        <TextBlock Text="Recovery phrase" />
+        <TextBox x:Name="RecoveryInput" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90"
+                 TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False"
+                 TextInputOptions.AutoCapitalization="False"
+                 Watermark="Enter an English BIP39 phrase to recover, or leave empty to create."
+                 AutomationProperties.Name="Recovery phrase" />
+        <TextBlock Text="Wallet password / recovery passphrase" TextWrapping="Wrap" />
+        <TextBox x:Name="PasswordInput" PasswordChar="●" AutomationProperties.Name="Wallet password" />
+        <TextBlock Classes="caption" Text="Wasabi uses this exact password to derive the wallet. A different password creates different addresses. Use the desktop wallet's original password when recovering."
+                   TextWrapping="Wrap" />
+        <TextBlock Text="Confirm password" />
+        <TextBox x:Name="ConfirmInput" PasswordChar="●" AutomationProperties.Name="Confirm password" />
+        <Button Classes="action" Content="Create testnet wallet" Click="CreateWallet" />
+        <Button Classes="action" Content="Recover testnet wallet" Click="RecoverWallet" />
+      </StackPanel>
+      <TextBlock x:Name="SetupStatus" TextWrapping="Wrap" Foreground="#C7E99A"
+                 AutomationProperties.LiveSetting="Polite" />
+      <StackPanel x:Name="BackupPanel" IsVisible="False" Spacing="14">
+        <TextBlock Text="Write down your recovery phrase" FontSize="20" TextWrapping="Wrap" />
+        <Border Classes="card">
+          <TextBlock x:Name="RecoveryDisplay" TextWrapping="Wrap" FontSize="18" />
+        </Border>
+        <TextBlock Text="Keep these words and your exact password privately. They are needed to recover this wallet. The app saves neither to disk."
+                   TextWrapping="Wrap" />
+        <CheckBox x:Name="BackupConfirmed" Content="I saved my words and password"
+                  IsCheckedChanged="BackupConfirmationChanged" />
+        <Button x:Name="OpenButton" Classes="action" Content="Open testnet wallet"
+                IsEnabled="False" Click="OpenWallet" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

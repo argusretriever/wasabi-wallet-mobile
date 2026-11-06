@@ -12,9 +12,15 @@ public class App : Application
     {
         if (ApplicationLifetime is ISingleViewApplicationLifetime mobile)
         {
-            mobile.MainView = new DashboardView();
+            ShowSetup(mobile);
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void ShowSetup(ISingleViewApplicationLifetime mobile)
+    {
+        mobile.MainView = new WalletSetupView(session =>
+            mobile.MainView = new DashboardView(session, () => ShowSetup(mobile)));
     }
 }
