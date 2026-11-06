@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../WalletWasabi/WalletWasabi.csproj" />
+    <ProjectReference Include="../WalletWasabi.Client/WalletWasabi.Client.csproj" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />

@@ -8,6 +8,8 @@
     <ApplicationDisplayVersion>0.2</ApplicationDisplayVersion>
     <AndroidPackageFormats>apk</AndroidPackageFormats>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <!-- The native Java HTTP handler treats the Tor SOCKS proxy as HTTP CONNECT. -->
+    <UseNativeHttpHandler>false</UseNativeHttpHandler>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />

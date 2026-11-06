@@ -578,12 +578,18 @@ public class Global
 		return (ChainHeight) Height.Min(checkpointHeight, ((ChainHeight?[]) [transactionHeight, birthHeight, worstBestHeight]).DropNulls());
 	}
 
-	public async Task InitializeAsync(bool initializeSleepInhibitor, TerminateService terminateService, CancellationToken cancellationToken)
+	public Task InitializeAsync(bool initializeSleepInhibitor, TerminateService terminateService, CancellationToken cancellationToken) =>
+		InitializeAsync(initializeSleepInhibitor, terminateService, cancellationToken, checkForUpdates: true);
+
+	public async Task InitializeAsync(bool initializeSleepInhibitor, TerminateService terminateService, CancellationToken cancellationToken, bool checkForUpdates)
 	{
 		using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stoppingCts.Token);
 		CancellationToken linkedCtsToken = linkedCts.Token;
 
-		ConfigureWasabiUpdater(linkedCtsToken);
+		if (checkForUpdates)
+		{
+			ConfigureWasabiUpdater(linkedCtsToken);
+		}
 		ConfigureExchangeRateUpdater(linkedCtsToken);
 		ConfigureRpcMonitor(linkedCtsToken);
 		ConfigureFeeRateUpdater(linkedCtsToken);

@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WalletWasabi.Mobile.WalletUnlockView" Background="#1F1F1F">
+  <ScrollViewer>
+    <StackPanel Margin="20,32" Spacing="18" MaxWidth="560">
+      <TextBlock Text="Wasabi Wallet" FontSize="24" FontWeight="SemiBold" />
+      <TextBlock Text="Unlock testnet wallet" FontSize="20" />
+      <TextBlock Text="Your wallet is saved on this device. Enter your local unlock password. There is no server account or password reset." TextWrapping="Wrap" />
+      <TextBox x:Name="UnlockPassword" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Local unlock password" AutomationProperties.Name="Unlock password" />
+      <Button x:Name="UnlockButton" Classes="action" Content="Unlock wallet" Click="UnlockWallet" />
+      <TextBlock x:Name="UnlockStatus" TextWrapping="Wrap" Foreground="#C7E99A" AutomationProperties.LiveSetting="Polite" />
+      <TextBlock Text="Keep your recovery words and exact password. Reinstalling the app or losing device keys can make local storage unreadable. This Testnet4 preview does not yet support payments or biometric unlock." TextWrapping="Wrap" Foreground="#AAAAAA" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

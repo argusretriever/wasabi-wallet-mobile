@@ -306,6 +306,24 @@ public class KeyManager
 		return km;
 	}
 
+	/// <summary>Serializes the password-encrypted wallet without writing a wallet file.</summary>
+	public string ToJson()
+	{
+		lock (_criticalStateLock)
+		{
+			return JsonEncoder.ToReadableString(this, EncodeKeyManagerNoLock);
+		}
+	}
+
+	/// <summary>Loads a wallet in memory; persistence remains the caller's responsibility.</summary>
+	public static KeyManager FromJson(string json)
+	{
+		var manager = JsonDecoder.FromString(json, Decoder)
+			?? throw new DataException("Invalid wallet data.");
+		manager.SetFilePath(null);
+		return manager;
+	}
+
 	public void SetFilePath(string? filePath)
 	{
 		FilePath = string.IsNullOrWhiteSpace(filePath) ? null : filePath;

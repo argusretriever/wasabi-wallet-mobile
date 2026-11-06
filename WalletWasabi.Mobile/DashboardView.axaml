@@ -10,14 +10,14 @@
                    FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
       </Grid>
       <Border Background="#333B24" CornerRadius="6" Padding="12">
-        <TextBlock Text="TESTNET4 · SESSION ONLY" Foreground="#C7E99A" FontSize="11" />
+        <TextBlock Text="TESTNET4 · DEVICE STORAGE" Foreground="#C7E99A" FontSize="11" />
       </Border>
       <TextBlock Text="Testnet Wallet" FontSize="23" FontWeight="SemiBold" />
       <Border Classes="card">
         <StackPanel Spacing="10">
           <TextBlock Classes="caption" Text="BALANCE" />
-          <TextBlock Text="Not synchronized" FontSize="24" TextWrapping="Wrap" />
-          <TextBlock Classes="caption" Text="Network synchronization is pending." TextWrapping="Wrap" />
+          <TextBlock x:Name="BalanceDisplay" Text="Not synchronized" FontSize="24" TextWrapping="Wrap" />
+          <TextBlock Classes="caption" Text="Balance appears after the wallet scan catches up." TextWrapping="Wrap" />
         </StackPanel>
       </Border>
       <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -37,10 +37,28 @@
         </StackPanel>
       </Border>
       <Border Classes="card">
-        <TextBlock Text="This wallet is kept in memory for this session. Recover it with the same words and password after closing. Tor, CoinJoin, transaction history and signing integration are pending."
+        <StackPanel Spacing="12">
+          <TextBlock Text="Synchronize through Tor" FontSize="18" FontWeight="SemiBold" />
+          <TextBlock Classes="caption" Text="Start a local Tor SOCKS service on 127.0.0.1:9050 first. This build uses an external Tor service."
+                     TextWrapping="Wrap" />
+          <TextBlock x:Name="SyncStatus" Text="Sync is stopped." TextWrapping="Wrap"
+                     AutomationProperties.LiveSetting="Polite" />
+          <TextBlock x:Name="SyncProgress" Classes="caption" TextWrapping="Wrap" />
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Button x:Name="StartSyncButton" Classes="action" Content="Start sync" Click="StartSync" />
+            <Button x:Name="StopSyncButton" Grid.Column="1" Content="Stop" Click="StopSync"
+                    IsEnabled="False" MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+          </Grid>
+        </StackPanel>
+      </Border>
+      <TextBlock Text="Transactions" FontSize="18" FontWeight="SemiBold" />
+      <TextBlock x:Name="TransactionsDisplay" Text="Waiting for a completed wallet scan."
+                 TextWrapping="Wrap" FontSize="12" />
+      <Border Classes="card">
+        <TextBlock Text="Wallet keys are saved with device protection and password encryption. Lock the wallet when finished. Blockchain and public transaction caches are saved during sync. Signing and CoinJoin are pending."
                    Foreground="#AAAAAA" TextWrapping="Wrap" />
       </Border>
-      <Button Content="Close wallet" Click="CloseWallet" HorizontalAlignment="Stretch"
+      <Button x:Name="CloseWalletButton" Content="Lock wallet" Click="CloseWallet" HorizontalAlignment="Stretch"
               HorizontalContentAlignment="Center" MinHeight="48" />
     </StackPanel>
   </ScrollViewer>

@@ -5,7 +5,7 @@ using WalletWasabi.Blockchain.Keys;
 
 namespace WalletWasabi.Mobile;
 
-/// <summary>A testnet key manager kept in memory until the session ends.</summary>
+/// <summary>An open testnet wallet. The key manager never writes a plaintext wallet file.</summary>
 public sealed class TestnetWalletSession
 {
     private readonly KeyManager _keyManager;
@@ -21,6 +21,26 @@ public sealed class TestnetWalletSession
     public string ReceivingAddress { get; }
     public string ReceivingKeyPath { get; }
     public string Fingerprint => _keyManager.MasterFingerprint?.ToString() ?? "";
+    internal KeyManager KeyManager => _keyManager;
+
+    public string ExportEncryptedWallet() => _keyManager.ToJson();
+
+    public static TestnetWalletSession Unlock(string json, string password)
+    {
+        var manager = KeyManager.FromJson(json);
+        if (manager.GetNetwork() != Network.TestNet4 || manager.IsWatchOnly)
+            throw new FormatException("Only Testnet4 software wallets are supported.");
+        manager.GetMasterExtKey(password);
+        return new TestnetWalletSession(manager);
+    }
+
+    internal static TestnetWalletSession RestoreProtected(string json)
+    {
+        var manager = KeyManager.FromJson(json);
+        if (manager.GetNetwork() != Network.TestNet4 || manager.IsWatchOnly)
+            throw new FormatException("Only Testnet4 software wallets are supported.");
+        return new TestnetWalletSession(manager);
+    }
 
     public static (TestnetWalletSession Session, string RecoveryWords) Create(string password)
     {

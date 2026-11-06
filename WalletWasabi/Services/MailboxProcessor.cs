@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
@@ -68,7 +69,8 @@ public sealed class MailboxProcessor<TMsg>(
 			throw new InvalidOperationException("The processor has already been started.");
 		}
 
-		_processingTask = Task.Run(InternalStartAsync, _cts.Token);
+		var token = _cts.Token;
+		_processingTask = Task.Run(() => InternalStartAsync(token), token);
 	}
 
 	public bool Post(TMsg message)
@@ -120,15 +122,16 @@ public sealed class MailboxProcessor<TMsg>(
 		_mailbox.Complete();
 		_cts.Cancel();
 		_cts.Dispose();
+		Workers.Unregister(Name, this);
 	}
 
-	private async Task InternalStartAsync()
+	private async Task InternalStartAsync(CancellationToken token)
 	{
 		try
 		{
-			await _body(_mailbox, _cts.Token).ConfigureAwait(false);
+			await _body(_mailbox, token).ConfigureAwait(false);
 		}
-		catch (OperationCanceledException) when (_cts.Token.IsCancellationRequested)
+		catch (OperationCanceledException) when (token.IsCancellationRequested)
 		{
 			// Normal cancellation, ignore
 		}
@@ -165,16 +168,19 @@ public static class Workers
 		ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
 		ArgumentNullException.ThrowIfNull(body, nameof(body));
 
-		if (Processors.ContainsKey(name))
+		var processor = new MailboxProcessor<TMsg>(name, body, capacity, cancellationToken);
+		if (!Processors.TryAdd(name, processor))
 		{
+			processor.Dispose();
 			throw new ArgumentException($"A worker named '{name}' already exists.", nameof(name));
 		}
 
-		var processor = new MailboxProcessor<TMsg>(name, body, capacity, cancellationToken);
 		processor.Start();
-		Processors[name] = processor;
 		return processor;
 	}
+
+	internal static void Unregister(string name, object processor) =>
+		((ICollection<KeyValuePair<string, object>>)Processors).Remove(new(name, processor));
 
 	public static bool Tell<TMsg>(string name, TMsg msg)
 	{

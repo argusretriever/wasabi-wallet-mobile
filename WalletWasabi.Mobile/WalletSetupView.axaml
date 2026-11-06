@@ -10,7 +10,7 @@
       </Grid>
       <TextBlock Text="Testnet wallet" FontSize="24" FontWeight="SemiBold" />
       <Border Classes="card">
-        <TextBlock Text="TESTNET4 · SESSION ONLY&#10;This development wallet stays in memory. Save your recovery phrase and exact password to recover it after closing the app. Balance sync and payments are pending."
+        <TextBlock Text="TESTNET4 · DEVICE STORAGE&#10;Your wallet is saved with device protection and password-encrypted keys. Keep your recovery words and exact password. Sync requires a local Tor service. Payments are pending."
                    TextWrapping="Wrap" Foreground="#C7E99A" />
       </Border>
       <StackPanel x:Name="SetupForm" Spacing="12">
@@ -21,11 +21,15 @@
                  Watermark="Enter an English BIP39 phrase to recover, or leave empty to create."
                  AutomationProperties.Name="Recovery phrase" />
         <TextBlock Text="Wallet password / recovery passphrase" TextWrapping="Wrap" />
-        <TextBox x:Name="PasswordInput" PasswordChar="●" AutomationProperties.Name="Wallet password" />
+        <TextBox x:Name="PasswordInput" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" AutomationProperties.Name="Wallet password" />
         <TextBlock Classes="caption" Text="Wasabi uses this exact password to derive the wallet. A different password creates different addresses. Use the desktop wallet's original password when recovering."
                    TextWrapping="Wrap" />
         <TextBlock Text="Confirm password" />
-        <TextBox x:Name="ConfirmInput" PasswordChar="●" AutomationProperties.Name="Confirm password" />
+        <TextBox x:Name="ConfirmInput" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" AutomationProperties.Name="Confirm password" />
+        <TextBlock Text="Local unlock password (12+ characters)" TextWrapping="Wrap" />
+        <TextBox x:Name="LocalPassword" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" AutomationProperties.Name="Local unlock password" />
+        <TextBox x:Name="LocalConfirm" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Confirm local unlock password" AutomationProperties.Name="Confirm local unlock password" />
+        <TextBlock Classes="caption" Text="This password unlocks the saved wallet on this phone. It does not change the recovery passphrase or wallet addresses." TextWrapping="Wrap" />
         <Button Classes="action" Content="Create testnet wallet" Click="CreateWallet" />
         <Button Classes="action" Content="Recover testnet wallet" Click="RecoverWallet" />
       </StackPanel>
@@ -36,11 +40,15 @@
         <Border Classes="card">
           <TextBlock x:Name="RecoveryDisplay" TextWrapping="Wrap" FontSize="18" />
         </Border>
-        <TextBlock Text="Keep these words and your exact password privately. They are needed to recover this wallet. The app saves neither to disk."
+        <TextBlock Text="Keep these words and your exact password privately. They are needed to recover this wallet. The app saves encrypted wallet keys, never your recovery phrase or password."
                    TextWrapping="Wrap" />
+        <TextBlock Text="Confirm words 1, 6 and 12 from your backup" TextWrapping="Wrap" />
+        <TextBox x:Name="WordOne" Watermark="Word 1" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" />
+        <TextBox x:Name="WordSix" Watermark="Word 6" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" />
+        <TextBox x:Name="WordTwelve" Watermark="Word 12" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" />
         <CheckBox x:Name="BackupConfirmed" Content="I saved my words and password"
                   IsCheckedChanged="BackupConfirmationChanged" />
-        <Button x:Name="OpenButton" Classes="action" Content="Open testnet wallet"
+        <Button x:Name="OpenButton" Classes="action" Content="Save and open wallet"
                 IsEnabled="False" Click="OpenWallet" />
       </StackPanel>
     </StackPanel>
