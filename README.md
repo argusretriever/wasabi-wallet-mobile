@@ -1,6 +1,6 @@
 # Wasabi Wallet Mobile
 
-An independent iOS and Android port of Wasabi Wallet v2.8.5. This repository starts with the upstream desktop source at commit `86ea7242ca218c1d576db2756bb22dc165cc7325` and the mobile project scope below. Mobile app targets and installable builds are planned.
+An independent iOS and Android port of Wasabi Wallet v2.8.5. This repository starts with the upstream desktop source at commit `86ea7242ca218c1d576db2756bb22dc165cc7325` and the mobile project scope below. A shared sample dashboard and Android and iOS app targets are now available. Wallet integration is planned. See the [mobile development guide](WalletWasabi.Documentation/MobileDevelopment.md) for build commands and current limitations.
 
 - Reuse the C# wallet engine and Avalonia interface, including the Wasabi logo, styles, themes, and desktop workflows.
 - Target wallet creation and recovery, send and receive, QR scanning, transaction history, coin control, fees, Tor, and CoinJoin.

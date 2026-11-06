@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="WalletWasabi.Mobile/WalletWasabi.Mobile.csproj" />
+  <Project Path="WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj" />
+  <Project Path="WalletWasabi.Mobile.iOS/WalletWasabi.Mobile.iOS.csproj" />
+</Solution>

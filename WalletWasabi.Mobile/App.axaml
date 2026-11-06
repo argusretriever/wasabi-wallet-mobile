@@ -1,0 +1,30 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WalletWasabi.Mobile.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="#F4F4F4" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#262626" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="16" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="Foreground" Value="#AAAAAA" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="Button.action">
+      <Setter Property="Background" Value="#78AF00" />
+      <Setter Property="Foreground" Value="#101010" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </Application.Styles>
+</Application>
