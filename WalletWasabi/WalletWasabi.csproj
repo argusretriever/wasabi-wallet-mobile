@@ -34,7 +34,7 @@
 		<PackageReference Include="WabiSabi" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'$(IncludeDesktopTools)' != 'false'">
 		<!-- Tor. -->
 		<None Update="BundledApps\Binaries\linux-arm64\Tor\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -64,6 +64,9 @@
 		<None Update="BundledApps\Binaries\win-x64\hwi.exe">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- GEOIP. -->
 		<None Update="Tor\Geoip\geoip">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
