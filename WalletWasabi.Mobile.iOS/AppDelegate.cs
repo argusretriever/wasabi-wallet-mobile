@@ -8,11 +8,6 @@ namespace WalletWasabi.Mobile.iOS;
 [Register("AppDelegate")]
 public class AppDelegate : AvaloniaAppDelegate<App>
 {
-    [Export("init")]
-    public AppDelegate()
-    {
-    }
-
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         App.DeviceStorage = new IosWalletStorage();
