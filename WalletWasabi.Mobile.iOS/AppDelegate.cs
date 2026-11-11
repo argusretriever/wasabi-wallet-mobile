@@ -1,65 +1,34 @@
-using System;
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Foundation;
 using UIKit;
 
 namespace WalletWasabi.Mobile.iOS;
 
-[Register("AppDelegate")]
-public class AppDelegate : UIApplicationDelegate, IAvaloniaAppDelegate
+[Register("WasabiWalletAppDelegate")]
+public class AppDelegate : AvaloniaAppDelegate<App>
 {
-    public override UIWindow? Window { get; set; }
-    public event EventHandler<ActivatedEventArgs>? Activated;
-    public event EventHandler<ActivatedEventArgs>? Deactivated;
+    [Export("init")]
+    public AppDelegate()
+    {
+    }
 
-    public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         App.DeviceStorage = new IosWalletStorage();
-        var lifetime = new WalletViewLifetime();
-        AppBuilder.Configure<App>().UseiOS(this).WithInterFont()
-            .AfterApplicationSetup(_ =>
-            {
-                var view = new AvaloniaView { Content = lifetime.MainView };
-                var controller = new DefaultAvaloniaViewController { View = view };
-                view.InitWithController(controller);
-                lifetime.Host = view;
-                Window = new UIWindow { RootViewController = controller };
-            })
-            .SetupWithLifetime(lifetime);
-        Window!.MakeKeyAndVisible();
-        return true;
+        return base.CustomizeAppBuilder(builder).WithInterFont();
     }
 
-    public override void DidEnterBackground(UIApplication application)
+    public static void Main(string[] args)
     {
-        if (Application.Current is App app) app.OnBackgrounded();
-        Deactivated?.Invoke(this, new ActivatedEventArgs(ActivationKind.Background));
-    }
-
-    public override void WillEnterForeground(UIApplication application)
-    {
-        if (Application.Current is App app) app.OnForegrounded();
-        Activated?.Invoke(this, new ActivatedEventArgs(ActivationKind.Background));
-    }
-
-    public static void Main(string[] args) => UIApplication.Main(args, null, typeof(AppDelegate));
-
-    private sealed class WalletViewLifetime : ISingleViewApplicationLifetime
-    {
-        private Control? _mainView;
-        public AvaloniaView? Host { get; set; }
-
-        public Control? MainView
+        using var background = UIApplication.Notifications.ObserveDidEnterBackground((_, _) =>
         {
-            get => _mainView;
-            set
-            {
-                _mainView = value;
-                if (Host is { } view) view.Content = value;
-            }
-        }
+            if (Application.Current is App app) app.OnBackgrounded();
+        });
+        using var foreground = UIApplication.Notifications.ObserveWillEnterForeground((_, _) =>
+        {
+            if (Application.Current is App app) app.OnForegrounded();
+        });
+        UIApplication.Main(args, null, typeof(AppDelegate));
     }
 }
