@@ -60,12 +60,20 @@ jobs:
           ')
           xcrun simctl bootstatus "$device" -b
           xcrun simctl install "$device" "$app"
-          launch=$(xcrun simctl launch "$device" "$bundle_id")
+          launch=$(xcrun simctl launch --stdout="$RUNNER_TEMP/wallet-ios.stdout" \
+            --stderr="$RUNNER_TEMP/wallet-ios.stderr" "$device" "$bundle_id")
           echo "$launch"
           pid=${launch##*: }
           [[ "$pid" =~ ^[0-9]+$ ]]
           sleep 10
           if ! kill -0 "$pid" 2>/dev/null; then
+            for log in "$RUNNER_TEMP/wallet-ios.stdout" "$RUNNER_TEMP/wallet-ios.stderr"; do
+              if [[ -f "$log" ]]; then cat "$log"; fi
+            done
+            xcrun simctl spawn "$device" log show --last 1m \
+              --predicate "processID == $pid" --style compact || true
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 \
+              -name 'WalletWasabi.Mobile.iOS*.ips' -mmin -2 -exec cat {} \; || true
             echo "::error::The wallet exited shortly after launch."
             exit 1
           fi
