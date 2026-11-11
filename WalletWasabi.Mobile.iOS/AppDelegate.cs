@@ -14,18 +14,16 @@ public class AppDelegate : AvaloniaAppDelegate<App>
         return base.CustomizeAppBuilder(builder).WithInterFont();
     }
 
-    public static void Main(string[] args) =>
+    public static void Main(string[] args)
+    {
+        using var background = UIApplication.Notifications.ObserveDidEnterBackground((_, _) =>
+        {
+            if (Application.Current is App app) app.OnBackgrounded();
+        });
+        using var foreground = UIApplication.Notifications.ObserveWillEnterForeground((_, _) =>
+        {
+            if (Application.Current is App app) app.OnForegrounded();
+        });
         UIApplication.Main(args, null, typeof(AppDelegate));
-
-    public override void DidEnterBackground(UIApplication application)
-    {
-        if (Avalonia.Application.Current is App app) app.OnBackgrounded();
-        base.DidEnterBackground(application);
-    }
-
-    public override void WillEnterForeground(UIApplication application)
-    {
-        base.WillEnterForeground(application);
-        if (Avalonia.Application.Current is App app) app.OnForegrounded();
     }
 }
