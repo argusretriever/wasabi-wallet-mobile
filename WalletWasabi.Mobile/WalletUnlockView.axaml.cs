@@ -44,9 +44,7 @@ public partial class WalletUnlockView : UserControl
         }
         catch (Exception ex)
         {
-#if DEBUG
             System.Diagnostics.Debug.WriteLine($"Biometric/password unlock: {ex}");
-#endif
             UnlockStatus.Text = "Could not unlock or enable biometrics. Check your local password, or retry without enabling biometrics. Saved wallet data was not replaced.";
         }
         finally { _busy = false; SetButtons(true); RefreshBiometrics(); }
@@ -67,9 +65,7 @@ public partial class WalletUnlockView : UserControl
         catch (OperationCanceledException) { UnlockStatus.Text = "Cancelled. Enter your password to unlock."; }
         catch (Exception ex)
         {
-#if DEBUG
             System.Diagnostics.Debug.WriteLine($"Biometric unlock: {ex}");
-#endif
             UnlockStatus.Text = "Biometric unlock unavailable. Use your password. You can remove and enable biometrics again after verification.";
         }
         finally { _busy = false; SetButtons(true); RefreshBiometrics(); }

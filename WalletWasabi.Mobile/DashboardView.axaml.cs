@@ -75,9 +75,7 @@ public partial class DashboardView : UserControl
         }
         catch (Exception ex)
         {
-#if DEBUG
             System.Diagnostics.Debug.WriteLine(ex);
-#endif
             SyncStatus.Text = "Sync could not start or continue. Check the local Tor service on port 9050, then retry.";
         }
         finally
@@ -192,9 +190,7 @@ public partial class DashboardView : UserControl
         catch (WalletWasabi.Exceptions.TransactionFeeOverpaymentException) { PaymentStatus.Text = "The fee exceeds the payment amount. Check the amount and fee rate."; }
         catch (Exception ex)
         {
-#if DEBUG
             System.Diagnostics.Debug.WriteLine(ex);
-#endif
             PaymentStatus.Text = "Could not build this draft. Complete sync and check the amount and fee; very small outputs may be rejected.";
         }
         finally
