@@ -48,3 +48,24 @@ jobs:
           name: Wasabi-Mobile-iOS-Simulator
           path: Wasabi-Mobile-iOS-Simulator.zip
           if-no-files-found: error
+      - name: Check simulator launch
+        timeout-minutes: 8
+        run: |
+          app=$(find WalletWasabi.Mobile.iOS/bin/Debug -type d -name '*.app' -prune -print -quit)
+          bundle_id=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
+          device=$(xcrun simctl list devices available --json | jq -er '
+            [.devices | to_entries[] | select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS-"))
+             | .value[] | select(.isAvailable and (.name | startswith("iPhone")))]
+            | first | .udid // empty
+          ')
+          xcrun simctl bootstatus "$device" -b
+          xcrun simctl install "$device" "$app"
+          launch=$(xcrun simctl launch "$device" "$bundle_id")
+          echo "$launch"
+          pid=${launch##*: }
+          [[ "$pid" =~ ^[0-9]+$ ]]
+          sleep 10
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "::error::The wallet exited shortly after launch."
+            exit 1
+          fi
