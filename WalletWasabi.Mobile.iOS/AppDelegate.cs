@@ -6,29 +6,42 @@ using UIKit;
 namespace WalletWasabi.Mobile.iOS;
 
 [Register("WasabiWalletAppDelegate")]
-public class AppDelegate : AvaloniaAppDelegate<App>
+public class AppDelegate : UIApplicationDelegate
 {
-    [Export("init")]
-    public AppDelegate()
+    private WalletAvaloniaHost? _host;
+
+    public override UIWindow? Window { get; set; }
+
+    public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
     {
+        var host = new WalletAvaloniaHost();
+        _host = host;
+        var launched = host.FinishedLaunching(application, launchOptions!);
+        Window = host.Window;
+        return launched;
     }
 
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    public override bool OpenUrl(UIApplication application, NSUrl url, NSDictionary options) =>
+        _host?.OpenUrl(application, url, options) ?? false;
+
+    public override void DidEnterBackground(UIApplication application)
     {
-        App.DeviceStorage = new IosWalletStorage();
-        return base.CustomizeAppBuilder(builder).WithInterFont();
+        if (Application.Current is App app) app.OnBackgrounded();
     }
 
-    public static void Main(string[] args)
+    public override void WillEnterForeground(UIApplication application)
     {
-        using var background = UIApplication.Notifications.ObserveDidEnterBackground((_, _) =>
+        if (Application.Current is App app) app.OnForegrounded();
+    }
+
+    public static void Main(string[] args) => UIApplication.Main(args, null, typeof(AppDelegate));
+
+    private sealed class WalletAvaloniaHost : AvaloniaAppDelegate<App>
+    {
+        protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
-            if (Application.Current is App app) app.OnBackgrounded();
-        });
-        using var foreground = UIApplication.Notifications.ObserveWillEnterForeground((_, _) =>
-        {
-            if (Application.Current is App app) app.OnForegrounded();
-        });
-        UIApplication.Main(args, null, typeof(AppDelegate));
+            App.DeviceStorage = new IosWalletStorage();
+            return base.CustomizeAppBuilder(builder).WithInterFont();
+        }
     }
 }
