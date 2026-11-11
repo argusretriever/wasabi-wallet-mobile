@@ -4,6 +4,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="WalletWasabi.Tests" />
     <ProjectReference Include="../WalletWasabi/WalletWasabi.csproj" />
     <ProjectReference Include="../WalletWasabi.Client/WalletWasabi.Client.csproj" />
     <PackageReference Include="Avalonia" />

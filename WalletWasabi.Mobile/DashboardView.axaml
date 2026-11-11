@@ -26,6 +26,43 @@
       </Grid>
       <TextBlock x:Name="ActionStatus" Text="Receiving address derived locally with Wasabi's key manager."
                  Foreground="#B8CDA0" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+      <Border x:Name="PaymentPanel" Classes="card" IsVisible="False">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Prepare testnet payment" FontSize="18" FontWeight="SemiBold" />
+          <TextBlock Text="Unsigned draft only. Complete sync first. Only confirmed funds are used. Nothing is sent." TextWrapping="Wrap" Foreground="#C7E99A" />
+          <TextBlock Text="Recipient address" />
+          <TextBox x:Name="RecipientInput" Watermark="Testnet receiving address" TextWrapping="Wrap"
+                   TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" TextChanged="PaymentEdited" />
+          <TextBlock Text="Amount (BTC)" />
+          <TextBox x:Name="PaymentAmountInput" Watermark="0.00001" TextChanged="PaymentEdited" />
+          <TextBlock Text="Manual fee rate (sat/vB)" />
+          <TextBox x:Name="PaymentFeeInput" Text="1" TextChanged="PaymentEdited" />
+          <TextBlock Classes="caption" Text="Use a decimal point. The fee is added to the amount; it is not deducted from the recipient. Fee estimates and QR scanning are pending." TextWrapping="Wrap" />
+          <Button x:Name="ReviewPaymentButton" Classes="action" Content="Build unsigned review" Click="ReviewPayment" />
+          <TextBlock x:Name="PaymentStatus" TextWrapping="Wrap" Foreground="#C7E99A" AutomationProperties.LiveSetting="Polite" />
+          <Border x:Name="PaymentReviewPanel" IsVisible="False" BorderBrush="#718B43" BorderThickness="1" Padding="12" CornerRadius="6">
+            <StackPanel Spacing="12">
+              <TextBlock Text="Review unsigned payment" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <SelectableTextBlock x:Name="PaymentReviewText" TextWrapping="Wrap" FontSize="14" />
+              <TextBlock Text="Confirm the recipient uses Testnet4. Testnet networks share address formats. Coin selection can link addresses." TextWrapping="Wrap" Foreground="#C7E99A" />
+              <TextBlock Text="Enter your original recovery passphrase to sign locally. Leave it blank if you recovered the wallet without one." TextWrapping="Wrap" />
+              <TextBox x:Name="SigningPassphrase" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Recovery passphrase" AutomationProperties.Name="Recovery passphrase" />
+              <Button x:Name="SignPaymentButton" Classes="action" Content="Sign on this device" Click="SignPayment" />
+              <SelectableTextBlock x:Name="SigningResult" TextWrapping="Wrap" />
+              <StackPanel x:Name="BroadcastPanel" IsVisible="False" Spacing="8">
+                <CheckBox x:Name="BroadcastConsent">
+                  <TextBlock Text="I confirm the reviewed Testnet4 payment." TextWrapping="Wrap" />
+                </CheckBox>
+                <TextBlock Text="Broadcast shares the signed transaction over Tor with Testnet4 peers or the fallback broadcast service." TextWrapping="Wrap" />
+                <Button x:Name="BroadcastButton" Classes="action" Content="Broadcast to Testnet4"
+                        IsEnabled="{Binding #BroadcastConsent.IsChecked}" Click="BroadcastPayment" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <SelectableTextBlock x:Name="BroadcastResult" TextWrapping="Wrap" />
+          <Button Content="Close payment draft" Click="ClosePayment" MinHeight="48" />
+        </StackPanel>
+      </Border>
       <Border Classes="card">
         <StackPanel Spacing="12">
           <TextBlock Text="Receive testnet bitcoin" FontSize="18" FontWeight="SemiBold" />
@@ -55,7 +92,7 @@
       <TextBlock x:Name="TransactionsDisplay" Text="Waiting for a completed wallet scan."
                  TextWrapping="Wrap" FontSize="12" />
       <Border Classes="card">
-        <TextBlock Text="Wallet keys are saved with device protection and password encryption. Lock the wallet when finished. Blockchain and public transaction caches are saved during sync. Signing and CoinJoin are pending."
+        <TextBlock Text="Wallet keys are saved with device protection and password encryption. Lock the wallet when finished. Blockchain and public transaction caches are saved during sync. CoinJoin is pending."
                    Foreground="#AAAAAA" TextWrapping="Wrap" />
       </Border>
       <Button x:Name="CloseWalletButton" Content="Lock wallet" Click="CloseWallet" HorizontalAlignment="Stretch"

@@ -16,6 +16,23 @@ public class FilterProvidersTests(ITestOutputHelper output)
 {
 	private static readonly byte[] DummyFilterData = Convert.FromHexString("02832810ec08a0");
 
+	[Fact]
+	public void BitcoinP2pSync_RequestsFirstHeaderAfterPersistedFilterTip()
+	{
+		const uint persistedHeight = 98;
+		var blockHeaders = InitializeBlockchain(Network.RegTest);
+		var persistedBlock = blockHeaders.GetBlock((int)persistedHeight);
+		var filterHeaders = new FilterHeaderChain();
+		filterHeaders.AppendTip(new SmartHeader(
+			persistedBlock.HashBlock, uint256.Zero, persistedHeight, persistedBlock.Header.BlockTime));
+		var state = new FilterSynchronizationState(blockHeaders, filterHeaders, persistedHeight);
+
+		Assert.True(state.TryAssignHeaderRange(Network.RegTest, out var request));
+		Assert.Equal(persistedHeight + 1, request.StartHeight);
+		Assert.Equal(blockHeaders.Tip.HashBlock, request.StopHash);
+		Assert.False(state.TryAssignFilterRange(out _));
+	}
+
 	[Theory]
 	[InlineData(1)]
 	[InlineData(99)]

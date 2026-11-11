@@ -1,0 +1,49 @@
+name: iOS Simulator
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/mobile-ios.yml'
+      - 'WalletWasabi.Mobile*/**'
+      - 'WalletWasabi.Client/**'
+      - 'WalletWasabi/**'
+      - 'Directory.*'
+      - 'NuGet.Config'
+      - 'global.json'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/mobile-dotnet
+        with:
+          dotnet-version: '10.0.401'
+      - name: Install the iOS workload
+        run: |
+          xcodebuild -version
+          dotnet workload install ios --version 10.0.401
+      - name: Build the ARM64 simulator app
+        run: |
+          dotnet build WalletWasabi.Mobile.iOS/WalletWasabi.Mobile.iOS.csproj \
+            --configuration Debug --runtime iossimulator-arm64
+      - name: Package the simulator app
+        run: |
+          app=$(find WalletWasabi.Mobile.iOS/bin/Debug -type d -name '*.app' -prune -print -quit)
+          test -n "$app"
+          ditto -c -k --keepParent "$app" Wasabi-Mobile-iOS-Simulator.zip
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Wasabi-Mobile-iOS-Simulator
+          path: Wasabi-Mobile-iOS-Simulator.zip
+          if-no-files-found: error

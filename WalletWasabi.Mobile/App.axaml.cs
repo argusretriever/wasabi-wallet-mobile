@@ -10,6 +10,7 @@ namespace WalletWasabi.Mobile;
 public class App : Application
 {
     public static IDeviceWalletStorage? DeviceStorage { get; set; }
+    public static IBiometricUnlock? BiometricUnlock { get; set; }
     private ProtectedWalletStore? _store;
     private bool _backgrounded;
     private bool _closing;

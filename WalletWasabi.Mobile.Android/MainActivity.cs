@@ -17,6 +17,8 @@ public class MainActivity : AvaloniaMainActivity<App>
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         App.DeviceStorage = new AndroidWalletStorage(ApplicationContext!.NoBackupFilesDir!.AbsolutePath);
+        App.BiometricUnlock = System.OperatingSystem.IsAndroidVersionAtLeast(30)
+            ? new AndroidBiometricUnlock(this, ApplicationContext.NoBackupFilesDir.AbsolutePath) : null;
         base.OnCreate(savedInstanceState);
         Window?.AddFlags(WindowManagerFlags.Secure);
     }

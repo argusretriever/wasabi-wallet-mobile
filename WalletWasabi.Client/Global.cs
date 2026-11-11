@@ -604,10 +604,10 @@ public class Global
 				InitializeBitcoinStoreAsync(linkedCtsToken))
 				.ConfigureAwait(false);
 
-			// Bitcoin P2P network can be started after filters are initialized.
-			_p2pConnectionManager.Start(linkedCtsToken);
-
 			await ConfigureSynchronizerAsync(linkedCtsToken).ConfigureAwait(false);
+
+			// Register filter synchronization behaviors before peers can connect.
+			_p2pConnectionManager.Start(linkedCtsToken);
 
 			if (_disposeRequested)
 			{

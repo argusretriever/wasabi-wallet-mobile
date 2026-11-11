@@ -261,6 +261,7 @@ public class TransactionBroadcaster(IBroadcaster[] broadcasters, MempoolService 
 	{
 		foreach (var broadcaster in broadcasters)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			BroadcastingResult result = await broadcaster.BroadcastAsync(tx, cancellationToken).ConfigureAwait(false);
 			if (result.IsOk)
 			{

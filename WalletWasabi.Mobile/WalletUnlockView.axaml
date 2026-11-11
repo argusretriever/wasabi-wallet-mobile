@@ -8,8 +8,11 @@
       <TextBlock Text="Your wallet is saved on this device. Enter your local unlock password. There is no server account or password reset." TextWrapping="Wrap" />
       <TextBox x:Name="UnlockPassword" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Local unlock password" AutomationProperties.Name="Unlock password" />
       <Button x:Name="UnlockButton" Classes="action" Content="Unlock wallet" Click="UnlockWallet" />
+      <CheckBox x:Name="EnableBiometrics" Content="Enable biometric unlock after password verification" IsVisible="False" />
+      <Button x:Name="BiometricButton" Content="Unlock with biometrics" Click="UnlockWithBiometrics" IsVisible="False" MinHeight="48" />
+      <Button x:Name="DisableBiometricButton" Content="Remove biometric unlock" Click="DisableBiometrics" IsVisible="False" MinHeight="48" />
       <TextBlock x:Name="UnlockStatus" TextWrapping="Wrap" Foreground="#C7E99A" AutomationProperties.LiveSetting="Polite" />
-      <TextBlock Text="Keep your recovery words and exact password. Reinstalling the app or losing device keys can make local storage unreadable. This Testnet4 preview does not yet support payments or biometric unlock." TextWrapping="Wrap" Foreground="#AAAAAA" />
+      <TextBlock Text="Keep your recovery words, recovery passphrase and local password. Biometrics use the phone's system prompt; the app collects no fingerprint or face data. Payments remain pending." TextWrapping="Wrap" Foreground="#AAAAAA" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>
