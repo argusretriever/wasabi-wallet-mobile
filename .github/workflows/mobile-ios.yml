@@ -37,7 +37,7 @@ jobs:
         run: |
           dotnet build WalletWasabi.Mobile.iOS/WalletWasabi.Mobile.iOS.csproj \
             --configuration Debug --runtime iossimulator-arm64 \
-            -p:TrimMode=copy -p:IncludeDesktopTools=false -m:1
+            -p:TrimMode=copy -p:UseInterpreter=true -p:IncludeDesktopTools=false -m:1
       - name: Package the simulator app
         run: |
           app=$(find WalletWasabi.Mobile.iOS/bin/Debug -type d -name '*.app' -prune -print -quit)

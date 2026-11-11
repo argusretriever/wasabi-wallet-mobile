@@ -55,8 +55,10 @@ Launch Wasabi Mobile Preview from the device launcher. APKs are under the Androi
 The iOS target requires a Mac, a compatible Xcode installation and the .NET iOS workload. Build the simulator target from that Mac.
 
 ```sh
-dotnet workload install ios
-dotnet build WalletWasabi.Mobile.iOS/WalletWasabi.Mobile.iOS.csproj -p:RuntimeIdentifier=iossimulator-arm64
+dotnet workload install ios --version 10.0.401
+dotnet build WalletWasabi.Mobile.iOS/WalletWasabi.Mobile.iOS.csproj \
+  --configuration Debug --runtime iossimulator-arm64 \
+  -p:TrimMode=copy -p:UseInterpreter=true -p:IncludeDesktopTools=false -m:1
 ```
 
 Physical iPhone deployment additionally requires provisioning and signing. iOS builds have not yet been verified on a Mac.
