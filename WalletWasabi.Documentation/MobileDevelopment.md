@@ -40,6 +40,12 @@ dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -t:I
 dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -p:AndroidSdkDirectory=C:/dev/android-sdk -p:JavaSdkDirectory=C:/dev/jdk
 ```
 
+For a Release APK for an ARM64 phone, specify the Android runtime explicitly so restore selects the Android runtime packs:
+
+```powershell
+dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -c Release -r android-arm64 -p:AndroidSdkDirectory=C:/dev/android-sdk -p:JavaSdkDirectory=C:/dev/jdk -p:IncludeDesktopTools=false
+```
+
 Review and accept the required SDK licenses when prompted. Adjust the absolute SDK paths to match your machine. InstallAndroidDependencies can also accept licenses using AcceptAndroidSdkLicenses=True.
 
 To install a Debug APK on a connected Android device or a running emulator, use the same SDK arguments with the Install target.

@@ -6,6 +6,7 @@
   <key>CFBundleShortVersionString</key><string>0.2</string>
   <key>CFBundleVersion</key><string>2</string>
   <key>LSRequiresIPhoneOS</key><true/>
+  <key>NSFaceIDUsageDescription</key><string>Use Face ID to unlock your saved Wasabi wallet.</string>
   <key>UILaunchScreen</key><dict/>
   <key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array>
   <key>UISupportedInterfaceOrientations</key>

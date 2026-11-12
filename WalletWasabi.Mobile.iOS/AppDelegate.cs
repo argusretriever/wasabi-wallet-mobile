@@ -40,7 +40,9 @@ public class AppDelegate : UIApplicationDelegate
     {
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
-            App.DeviceStorage = new IosWalletStorage();
+            var storage = new IosWalletStorage();
+            App.DeviceStorage = storage;
+            App.BiometricUnlock = new IosBiometricUnlock(storage);
             return base.CustomizeAppBuilder(builder).WithInterFont();
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -20,6 +21,19 @@ public partial class WalletSetupView : UserControl
         InitializeComponent();
         _openWallet = openWallet;
         _store = store;
+        LocalPassword.TextChanged += UpdateLocalPasswordStrength;
+    }
+
+    private void UpdateLocalPasswordStrength(object? sender, TextChangedEventArgs args)
+    {
+        var password = LocalPassword.Text ?? "";
+        var distinctCharacters = password.Distinct().Count();
+        var rating = password.Length < 12 || distinctCharacters < 6 ? "Weak"
+            : password.Length >= 20 && distinctCharacters >= 10 ? "Very strong"
+            : "Strong";
+
+        LocalPasswordStrength.IsVisible = password.Length > 0;
+        LocalPasswordStrength.Text = password.Length > 0 ? $"Estimated strength: {rating}" : "";
     }
 
     private async void CreateWallet(object? sender, RoutedEventArgs args)

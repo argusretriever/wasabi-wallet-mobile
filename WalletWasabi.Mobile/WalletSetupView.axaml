@@ -28,6 +28,8 @@
         <TextBox x:Name="ConfirmInput" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" AutomationProperties.Name="Confirm password" />
         <TextBlock Text="Local unlock password (12+ characters)" TextWrapping="Wrap" />
         <TextBox x:Name="LocalPassword" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" AutomationProperties.Name="Local unlock password" />
+        <TextBlock x:Name="LocalPasswordStrength" Classes="caption" IsVisible="False"
+                   AutomationProperties.LiveSetting="Polite" />
         <TextBox x:Name="LocalConfirm" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Confirm local unlock password" AutomationProperties.Name="Confirm local unlock password" />
         <TextBlock Classes="caption" Text="This password unlocks the saved wallet on this phone. It does not change the recovery passphrase or wallet addresses." TextWrapping="Wrap" />
         <Button Classes="action" Content="Create testnet wallet" Click="CreateWallet" />
