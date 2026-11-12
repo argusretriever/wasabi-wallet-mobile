@@ -1,7 +1,7 @@
 name: "Build"
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "*", "mobile/**" ]
   pull_request:
 
 concurrency:
@@ -41,7 +41,7 @@ jobs:
             runtime: win-x64
           - os: macos-15-intel
             runtime: osx-x64
-          - os: macos-15
+          - os: macos-26
             runtime: osx-arm64
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
