@@ -1,0 +1,10 @@
+unit-tests:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  variables:
+    AVALONIA_TELEMETRY_OPTOUT: "1"
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    DOTNET_NOLOGO: "1"
+  script:
+    - dotnet restore WalletWasabi.Tests/WalletWasabi.Tests.csproj
+    - dotnet build WalletWasabi.Tests/WalletWasabi.Tests.csproj --no-restore --configuration Release
+    - dotnet test --project WalletWasabi.Tests/WalletWasabi.Tests.csproj --no-build --configuration Release --filter-namespace "*UnitTests*" --no-progress --no-ansi --output Normal
