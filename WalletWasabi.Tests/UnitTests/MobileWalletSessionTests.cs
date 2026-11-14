@@ -77,4 +77,38 @@ public class MobileWalletSessionTests
         var invalidWords = Words.Replace("about", "abandon", StringComparison.Ordinal);
         Assert.Throws<FormatException>(() => TestnetWalletSession.Recover(invalidWords, ""));
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void WatchOnlyImportMatchesSignerAndRestoresWithoutPrivateKeys(bool includeTaproot)
+    {
+        var network = Network.TestNet4;
+        var master = new Mnemonic(Words).DeriveExtKey("");
+        var segwit = master.Derive(new KeyPath("84'/1'/0'")).Neuter();
+        var taproot = master.Derive(new KeyPath("86'/1'/0'")).Neuter();
+        var address = (includeTaproot ? taproot : segwit).Derive(0).Derive(0).PubKey.GetAddress(
+            includeTaproot ? ScriptPubKeyType.TaprootBIP86 : ScriptPubKeyType.Segwit, network).ToString();
+        var export = new System.Collections.Generic.Dictionary<string, object>
+        {
+            ["version"] = 1,
+            ["network"] = "testnet4",
+            ["masterFingerprint"] = master.PrivateKey.PubKey.GetHDFingerPrint().ToString(),
+            ["segwitAccountXpub"] = segwit.GetWif(network).ToString()
+        };
+        if (includeTaproot)
+            export["taprootAccountXpub"] = taproot.GetWif(network).ToString();
+        var json = System.Text.Json.JsonSerializer.Serialize(export);
+
+        var session = TestnetWalletSession.ImportWatchOnly(json, address);
+        Assert.True(session.IsWatchOnly);
+        Assert.Equal(address, session.ReceivingAddress);
+        Assert.Null(session.KeyManager.EncryptedSecret);
+        var restored = TestnetWalletSession.RestoreProtected(session.ExportEncryptedWallet());
+        Assert.True(restored.IsWatchOnly);
+        Assert.Equal(address, restored.ReceivingAddress);
+
+        var wrongAddress = segwit.Derive(0).Derive(1).PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+        Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, wrongAddress));
+    }
 }

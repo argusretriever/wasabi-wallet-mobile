@@ -50,6 +50,19 @@ internal sealed class TestnetPaymentDraft(TestnetPaymentReview review, PSBT psbt
 
     public PSBT OpenUnsignedPsbt() => PSBT.Parse(_unsignedPsbt, Network.TestNet4);
 
+    public Transaction ImportSignedPsbt(string encodedPsbt, ICoinsView coins)
+    {
+        var candidate = PSBT.Parse(encodedPsbt.Trim(), Network.TestNet4);
+        if (candidate.GetGlobalTransaction().GetHash() != OpenUnsignedPsbt().GetGlobalTransaction().GetHash())
+            throw new InvalidOperationException("The signed PSBT does not match the reviewed payment.");
+
+        if (!candidate.IsAllFinalized())
+            candidate.Finalize();
+        var signed = candidate.ExtractTransaction();
+        VerifyForBroadcast(signed, coins);
+        return signed;
+    }
+
     public Transaction Sign(KeyManager manager, ICoinsView coins, string recoveryPassphrase)
     {
         if (manager.GetNetwork() != Network.TestNet4 || manager.IsWatchOnly)

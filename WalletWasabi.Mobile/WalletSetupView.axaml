@@ -34,6 +34,14 @@
         <TextBlock Classes="caption" Text="This password unlocks the saved wallet on this phone. It does not change the recovery passphrase or wallet addresses." TextWrapping="Wrap" />
         <Button Classes="action" Content="Create testnet wallet" Click="CreateWallet" />
         <Button Classes="action" Content="Recover testnet wallet" Click="RecoverWallet" />
+        <TextBlock Text="Import a hardware watch-only wallet" TextWrapping="Wrap" />
+        <TextBox x:Name="WatchOnlyExport" MaxLength="4096" Watermark="Paste Testnet4 public wallet JSON"
+                 TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False"
+                 AutomationProperties.Name="Watch-only wallet JSON" />
+        <TextBox x:Name="SignerAddress" MaxLength="100" Watermark="First receiving address from signer"
+                 TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False"
+                 AutomationProperties.Name="First receiving address from signer" />
+        <Button Classes="action" Content="Import watch-only wallet" Click="ImportWatchOnly" />
       </StackPanel>
       <TextBlock x:Name="SetupStatus" TextWrapping="Wrap" Foreground="#C7E99A"
                  AutomationProperties.LiveSetting="Polite" />

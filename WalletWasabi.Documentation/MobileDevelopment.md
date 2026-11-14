@@ -1,5 +1,21 @@
 # Mobile development
 
+## Watch-only import format
+
+In the mobile setup screen, enter a local unlock password and its confirmation, then paste the public wallet JSON and the first receiving address displayed by the signer. Select **Import watch-only wallet** to save it. The JSON object uses these fields:
+
+| Field | Value |
+| --- | --- |
+| `version` | Integer `1` |
+| `network` | String `testnet4` |
+| `masterFingerprint` | Eight hexadecimal digits in BIP32 display order |
+| `segwitAccountXpub` | Required Testnet extended public key (`tpub`) for `m/84'/1'/0'` |
+| `taprootAccountXpub` | Optional Testnet extended public key (`tpub`) for `m/86'/1'/0'` |
+
+The app derives receiving and change addresses on branches `/0/*` and `/1/*`. With only the SegWit key, it uses SegWit receiving addresses. Import must reject private keys, unsupported versions or networks, malformed fingerprints and keys that do not encode a depth-three account-zero child. Extended keys alone cannot prove the full derivation path, master fingerprint or specific test network. Confirm those details and the first receive address against the signer before funding.
+
+This format carries public wallet data only. The phone prepares the PSBT and the external signer holds the private keys. Import does not require a recovery phrase or hardware wallet PIN.
+
 The mobile UI is an early Testnet4 wallet build. It uses the upstream Wasabi logo, Wasabi's existing key manager and the repository's centrally pinned Avalonia packages. The desktop application retains its existing entry point.
 
 The shared setup screen creates a 12-word English BIP39 wallet or recovers an English BIP39 phrase with checksum validation. The exact password is also the BIP39 passphrase, matching Wasabi's desktop behavior. The dashboard displays the first Taproot receiving address, key path and fingerprint.

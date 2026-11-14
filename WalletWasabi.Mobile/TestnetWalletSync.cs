@@ -68,6 +68,23 @@ public sealed class TestnetWalletSync
         }
         finally { _walletGate.Release(); }
     }
+    internal async Task<NBitcoin.Transaction> ImportSignedPsbtAsync(TestnetPaymentDraft draft, string encoded, CancellationToken token)
+    {
+        await _walletGate.WaitAsync(token);
+        try
+        {
+            if (_wallet is not { } wallet || _isReady?.Invoke() != true)
+                throw new InvalidOperationException("Complete synchronization before importing a signed PSBT.");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _runCancellation);
+            var signed = await Task.Run(() => draft.ImportSignedPsbt(encoded, wallet.Coins), linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            if (_isReady?.Invoke() != true)
+                throw new InvalidOperationException("Sync changed. Build a new review before importing.");
+            return signed;
+        }
+        finally { _walletGate.Release(); }
+    }
+
     internal async Task BroadcastPaymentAsync(TestnetPaymentDraft draft, NBitcoin.Transaction signed, CancellationToken token)
     {
         await _walletGate.WaitAsync(token);
