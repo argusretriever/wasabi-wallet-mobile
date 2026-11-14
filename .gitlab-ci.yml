@@ -4,6 +4,10 @@ unit-tests:
     AVALONIA_TELEMETRY_OPTOUT: "1"
     DOTNET_CLI_TELEMETRY_OPTOUT: "1"
     DOTNET_NOLOGO: "1"
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends libusb-1.0-0 libudev1
+    - ./WalletWasabi/BundledApps/Binaries/linux-x64/hwi enumerate
   script:
     - dotnet restore WalletWasabi.Tests/WalletWasabi.Tests.csproj
     - dotnet build WalletWasabi.Tests/WalletWasabi.Tests.csproj --no-restore --configuration Release
