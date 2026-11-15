@@ -153,8 +153,17 @@ public class MobileWalletPaymentTests
     {
         var network = Network.TestNet4;
         var (signer, coins, transactions) = FundedWallet();
-        var watchOnly = KeyManager.CreateNewHardwareWalletWatchOnly(
-            signer.MasterFingerprint!.Value, signer.SegwitExtPubKey, null, null, null, network);
+        var input = coins.Single();
+        var export = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            version = 1,
+            network = "testnet4",
+            masterFingerprint = signer.MasterFingerprint!.Value.ToString(),
+            segwitAccountXpub = signer.SegwitExtPubKey.GetWif(network).ToString()
+        });
+        var imported = TestnetWalletSession.ImportWatchOnly(export, input.HdPubKey.GetAddress(network).ToString());
+        var watchOnly = TestnetWalletSession.RestoreProtected(imported.ExportEncryptedWallet()).KeyManager;
+        Assert.True(watchOnly.IsWatchOnly);
         var address = Address(network);
         var draft = TestnetPaymentBuilder.BuildDraft(watchOnly, coins, transactions,
             TestnetPaymentRequest.Parse(address, "0.00003", "1"));
@@ -167,12 +176,12 @@ public class MobileWalletPaymentTests
         var response = PSBT.Parse(draft.OpenUnsignedPsbt().ToBase64(), network);
         Assert.Throws<FormatException>(() => draft.ImportSignedPsbt("not base64!", coins));
         Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(response.ToBase64(), coins));
-        var input = coins.Single();
         network.CreateTransactionBuilder()
             .AddCoins(input.Coin)
             .AddKeys(signer.GetSecrets("recovery passphrase", input.ScriptPubKey).ToArray())
             .SignPSBT(response);
         var signed = draft.ImportSignedPsbt(response.ToBase64(), coins);
+        draft.VerifyForBroadcast(signed, coins);
         Assert.Equal(draft.Sign(signer, coins, "recovery passphrase").GetWitHash(), signed.GetWitHash());
         response.Finalize();
         Assert.Equal(signed.GetWitHash(), draft.ImportSignedPsbt(response.ToBase64(), coins).GetWitHash());

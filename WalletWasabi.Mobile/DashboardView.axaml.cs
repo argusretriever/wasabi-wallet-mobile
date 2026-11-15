@@ -224,6 +224,7 @@ public partial class DashboardView : UserControl
             {
                 _signedPayment = signed;
                 SigningResult.Text = $"Signed locally.\nTransaction ID: {_signedPayment.GetHash()}";
+                BroadcastConsent.IsChecked = false;
                 BroadcastPanel.IsVisible = true;
             }
         }
@@ -273,6 +274,7 @@ public partial class DashboardView : UserControl
             SignedPsbtInput.Text = "";
             SignPaymentButton.IsEnabled = false;
             SigningResult.Text = $"External signature verified.\nTransaction ID: {signed.GetHash()}";
+            BroadcastConsent.IsChecked = false;
             BroadcastPanel.IsVisible = true;
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
@@ -286,7 +288,7 @@ public partial class DashboardView : UserControl
 
     private async void BroadcastPayment(object? sender, RoutedEventArgs args)
     {
-        if (_broadcasting || BroadcastConsent.IsChecked != true || _paymentDraft is not { } draft ||
+        if (_broadcasting || !BroadcastPanel.IsVisible || BroadcastConsent.IsChecked != true || _paymentDraft is not { } draft ||
             _signedPayment is not { } signed || _sync is not { } sync ||
             _syncCancellation is not { IsCancellationRequested: false } cancellation) return;
 
