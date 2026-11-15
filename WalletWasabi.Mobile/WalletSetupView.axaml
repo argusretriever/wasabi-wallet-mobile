@@ -10,7 +10,7 @@
       </Grid>
       <TextBlock Text="Testnet wallet" FontSize="24" FontWeight="SemiBold" />
       <Border Classes="card">
-        <TextBlock Text="TESTNET4 · DEVICE STORAGE&#10;Your wallet is saved with device protection and password-encrypted keys. Keep your recovery words and exact password. Sync requires a local Tor service. Payments are pending."
+        <TextBlock Text="TESTNET4 · DEVICE STORAGE&#10;Use this preview with testnet bitcoin. Sync requires a local Tor service. Keep your recovery words and exact wallet passphrase if you create or recover a wallet."
                    TextWrapping="Wrap" Foreground="#C7E99A" />
       </Border>
       <StackPanel x:Name="SetupForm" Spacing="12">
@@ -38,9 +38,12 @@
         <TextBox x:Name="WatchOnlyExport" MaxLength="4096" Watermark="Paste Testnet4 public wallet JSON"
                  TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False"
                  AutomationProperties.Name="Watch-only wallet JSON" />
-        <TextBox x:Name="SignerAddress" MaxLength="100" Watermark="First receiving address from signer"
+        <TextBox x:Name="SignerAddress" MaxLength="100" Watermark="First SegWit receiving address"
                  TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False"
-                 AutomationProperties.Name="First receiving address from signer" />
+                 AutomationProperties.Name="First SegWit receiving address from signer" />
+        <TextBox x:Name="TaprootSignerAddress" MaxLength="100" Watermark="First Taproot address (if included)"
+                 TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False"
+                 AutomationProperties.Name="First Taproot receiving address from signer, if included" />
         <Button Classes="action" Content="Import watch-only wallet" Click="ImportWatchOnly" />
       </StackPanel>
       <TextBlock x:Name="SetupStatus" TextWrapping="Wrap" Foreground="#C7E99A"

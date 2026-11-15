@@ -141,6 +141,7 @@ public partial class DashboardView : UserControl
         SigningPassphrase.Text = "";
         UnsignedPsbtText.Text = "";
         UnsignedPsbtText.IsVisible = false;
+        PsbtExportStatus.Text = "";
         SignedPsbtInput.Text = "";
         SigningResult.Text = "";
         SignPaymentButton.IsEnabled = true;
@@ -250,6 +251,28 @@ public partial class DashboardView : UserControl
         if (_paymentDraft is not { } draft) return;
         UnsignedPsbtText.Text = draft.OpenUnsignedPsbt().ToBase64();
         UnsignedPsbtText.IsVisible = true;
+    }
+
+    private async void CopyUnsignedPsbt(object? sender, RoutedEventArgs args)
+    {
+        if (_paymentDraft is not { } draft) return;
+        if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
+            PsbtExportStatus.Text = "Clipboard unavailable. Use Show unsigned PSBT to select the text.";
+            return;
+        }
+
+        try
+        {
+            await clipboard.SetTextAsync(draft.OpenUnsignedPsbt().ToBase64());
+            if (ReferenceEquals(_paymentDraft, draft))
+                PsbtExportStatus.Text = "Unsigned PSBT copied.";
+        }
+        catch (Exception)
+        {
+            if (ReferenceEquals(_paymentDraft, draft))
+                PsbtExportStatus.Text = "Could not copy. Use Show unsigned PSBT to select the text.";
+        }
     }
 
     private async void ImportSignedPsbt(object? sender, RoutedEventArgs args)

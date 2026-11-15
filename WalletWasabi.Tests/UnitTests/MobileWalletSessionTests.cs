@@ -87,8 +87,11 @@ public class MobileWalletSessionTests
         var master = new Mnemonic(Words).DeriveExtKey("");
         var segwit = master.Derive(new KeyPath("84'/1'/0'")).Neuter();
         var taproot = master.Derive(new KeyPath("86'/1'/0'")).Neuter();
-        var address = (includeTaproot ? taproot : segwit).Derive(0).Derive(0).PubKey.GetAddress(
-            includeTaproot ? ScriptPubKeyType.TaprootBIP86 : ScriptPubKeyType.Segwit, network).ToString();
+        var segwitAddress = segwit.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+        var taprootAddress = includeTaproot
+            ? taproot.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.TaprootBIP86, network).ToString()
+            : null;
+        var address = taprootAddress ?? segwitAddress;
         var export = new System.Collections.Generic.Dictionary<string, object>
         {
             ["version"] = 1,
@@ -100,7 +103,7 @@ public class MobileWalletSessionTests
             export["taprootAccountXpub"] = taproot.GetWif(network).ToString();
         var json = System.Text.Json.JsonSerializer.Serialize(export);
 
-        var session = TestnetWalletSession.ImportWatchOnly(json, address);
+        var session = TestnetWalletSession.ImportWatchOnly(json, segwitAddress, taprootAddress);
         Assert.True(session.IsWatchOnly);
         Assert.Equal(address, session.ReceivingAddress);
         Assert.Null(session.KeyManager.EncryptedSecret);
@@ -109,6 +112,11 @@ public class MobileWalletSessionTests
         Assert.Equal(address, restored.ReceivingAddress);
 
         var wrongAddress = segwit.Derive(0).Derive(1).PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
-        Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, wrongAddress));
+        Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, wrongAddress, taprootAddress));
+        if (includeTaproot)
+        {
+            Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, segwitAddress));
+            Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, segwitAddress, wrongAddress));
+        }
     }
 }

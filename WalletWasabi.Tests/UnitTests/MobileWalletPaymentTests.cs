@@ -148,20 +148,30 @@ public class MobileWalletPaymentTests
         Assert.Equal(input.Amount.Satoshi, payment.TotalOut.Satoshi + draft.Review.FeeSatoshis);
     }
 
-    [Fact]
-    public void ImportsExternalSignatureOnlyForTheReviewedPayment()
+    [Theory]
+    [InlineData(ScriptPubKeyType.Segwit)]
+    [InlineData(ScriptPubKeyType.TaprootBIP86)]
+    public void ImportsExternalSignatureOnlyForTheReviewedPayment(ScriptPubKeyType inputType)
     {
         var network = Network.TestNet4;
-        var (signer, coins, transactions) = FundedWallet();
+        var (signer, coins, transactions) = FundedWallet(inputType: inputType);
         var input = coins.Single();
-        var export = System.Text.Json.JsonSerializer.Serialize(new
+        var accountData = new Dictionary<string, object>
         {
-            version = 1,
-            network = "testnet4",
-            masterFingerprint = signer.MasterFingerprint!.Value.ToString(),
-            segwitAccountXpub = signer.SegwitExtPubKey.GetWif(network).ToString()
-        });
-        var imported = TestnetWalletSession.ImportWatchOnly(export, input.HdPubKey.GetAddress(network).ToString());
+            ["version"] = 1,
+            ["network"] = "testnet4",
+            ["masterFingerprint"] = signer.MasterFingerprint!.Value.ToString(),
+            ["segwitAccountXpub"] = signer.SegwitExtPubKey.GetWif(network).ToString()
+        };
+        var segwitAddress = signer.SegwitExtPubKey.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.Segwit, network);
+        string? taprootAddress = null;
+        if (inputType == ScriptPubKeyType.TaprootBIP86)
+        {
+            accountData["taprootAccountXpub"] = signer.TaprootExtPubKey!.GetWif(network).ToString();
+            taprootAddress = input.HdPubKey.GetAddress(network).ToString();
+        }
+        var export = System.Text.Json.JsonSerializer.Serialize(accountData);
+        var imported = TestnetWalletSession.ImportWatchOnly(export, segwitAddress.ToString(), taprootAddress);
         var watchOnly = TestnetWalletSession.RestoreProtected(imported.ExportEncryptedWallet()).KeyManager;
         Assert.True(watchOnly.IsWatchOnly);
         var address = Address(network);
@@ -182,14 +192,16 @@ public class MobileWalletPaymentTests
             .SignPSBT(response);
         var signed = draft.ImportSignedPsbt(response.ToBase64(), coins);
         draft.VerifyForBroadcast(signed, coins);
-        Assert.Equal(draft.Sign(signer, coins, "recovery passphrase").GetWitHash(), signed.GetWitHash());
+        Assert.Equal(response.GetGlobalTransaction().GetHash(), signed.GetHash());
         response.Finalize();
         Assert.Equal(signed.GetWitHash(), draft.ImportSignedPsbt(response.ToBase64(), coins).GetWitHash());
 
         var invalid = PSBT.Parse(response.ToBase64(), network);
-        var witness = Assert.Single(invalid.Inputs).FinalScriptWitness!;
-        using var wrongKey = new Key();
-        invalid.Inputs[0].FinalScriptWitness = new WitScript(new[] { witness[0], wrongKey.PubKey.ToBytes() });
+        var invalidInput = Assert.Single(invalid.Inputs);
+        var witness = invalidInput.FinalScriptWitness!;
+        var pushes = Enumerable.Range(0, witness.PushCount).Select(i => witness[i].ToArray()).ToArray();
+        pushes[0][0] ^= 1;
+        invalidInput.FinalScriptWitness = new WitScript(pushes);
         Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(invalid.ToBase64(), coins));
 
         input.CoinJoinInProgress = true;

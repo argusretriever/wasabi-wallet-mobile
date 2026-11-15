@@ -46,7 +46,7 @@ public sealed class TestnetWalletSession
         return new TestnetWalletSession(manager);
     }
 
-    public static TestnetWalletSession ImportWatchOnly(string json, string expectedAddress)
+    public static TestnetWalletSession ImportWatchOnly(string json, string segwitAddress, string? taprootAddress = null)
     {
         if (json.Length > 4096)
             throw new FormatException("The watch-only export is too large.");
@@ -76,13 +76,25 @@ public sealed class TestnetWalletSession
             ? ParseAccountKey(ReadString(root, "taprootAccountXpub")) : null;
         if (segwit.Equals(taproot))
             throw new FormatException("SegWit and Taproot require different account keys.");
+        VerifySignerAddress(segwit, ScriptPubKeyType.Segwit, segwitAddress, "SegWit");
+        if (taproot is not null)
+            VerifySignerAddress(taproot, ScriptPubKeyType.TaprootBIP86, taprootAddress, "Taproot");
+        else if (!string.IsNullOrWhiteSpace(taprootAddress))
+            throw new FormatException("A Taproot address requires a Taproot account key.");
+
         var manager = KeyManager.CreateNewHardwareWalletWatchOnly(
             new HDFingerprint(Convert.FromHexString(fingerprint)), segwit, taproot, null, null, Network.TestNet4);
-        var session = new TestnetWalletSession(manager);
-        var signerAddress = BitcoinAddress.Create(expectedAddress.Trim(), Network.TestNet4);
-        if (!string.Equals(session.ReceivingAddress, signerAddress.ToString(), StringComparison.OrdinalIgnoreCase))
-            throw new FormatException("The first receiving address does not match the signer.");
-        return session;
+        return new TestnetWalletSession(manager);
+    }
+
+    private static void VerifySignerAddress(ExtPubKey account, ScriptPubKeyType type, string? address, string label)
+    {
+        if (string.IsNullOrWhiteSpace(address))
+            throw new FormatException($"Enter the first {label} receiving address from the signer.");
+        var supplied = BitcoinAddress.Create(address.Trim(), Network.TestNet4);
+        var derived = account.Derive(0).Derive(0).PubKey.GetAddress(type, Network.TestNet4);
+        if (supplied.ScriptPubKey != derived.ScriptPubKey)
+            throw new FormatException($"The first {label} receiving address does not match the signer.");
     }
 
     private static string ReadString(JsonElement root, string name) =>

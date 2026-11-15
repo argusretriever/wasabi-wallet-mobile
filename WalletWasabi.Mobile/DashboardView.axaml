@@ -49,8 +49,9 @@
               <TextBox x:Name="SigningPassphrase" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Recovery passphrase" AutomationProperties.Name="Recovery passphrase" />
               <Button x:Name="SignPaymentButton" Classes="action" Content="Sign on this device" Click="SignPayment" />
               <Button Classes="action" Content="Show unsigned PSBT" Click="ShowUnsignedPsbt" />
-              <TextBlock Classes="caption" Text="Share the PSBT only with your signer. It contains transaction and wallet details." TextWrapping="Wrap"
-                         IsVisible="{Binding #UnsignedPsbtText.IsVisible}" />
+              <Button Classes="action" Content="Copy unsigned PSBT" Click="CopyUnsignedPsbt" />
+              <TextBlock Classes="caption" Text="Share the PSBT only with your signer. It contains transaction and wallet details." TextWrapping="Wrap" />
+              <TextBlock x:Name="PsbtExportStatus" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
               <SelectableTextBlock x:Name="UnsignedPsbtText" TextWrapping="Wrap" IsVisible="False" />
               <TextBox x:Name="SignedPsbtInput" Watermark="Paste signed PSBT (Base64)" TextWrapping="Wrap"
                        MaxLength="3500000" AutomationProperties.Name="Signed PSBT" />

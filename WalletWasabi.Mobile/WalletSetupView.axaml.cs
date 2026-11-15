@@ -110,11 +110,12 @@ public partial class WalletSetupView : UserControl
         if (!ValidateLocalPassword()) return;
         var export = WatchOnlyExport.Text ?? "";
         var address = SignerAddress.Text ?? "";
+        var taprootAddress = TaprootSignerAddress.Text;
         var localPassword = LocalPassword.Text ?? "";
         SetBusy(true);
         try
         {
-            var session = await Task.Run(() => TestnetWalletSession.ImportWatchOnly(export, address));
+            var session = await Task.Run(() => TestnetWalletSession.ImportWatchOnly(export, address, taprootAddress));
             if (!_active) return;
             await _store.SaveNewAsync(session, localPassword);
             if (!_active) return;
@@ -173,7 +174,7 @@ public partial class WalletSetupView : UserControl
         PasswordInput.Text = "";
         ConfirmInput.Text = "";
         LocalPassword.Text = LocalConfirm.Text = "";
-        WatchOnlyExport.Text = SignerAddress.Text = "";
+        WatchOnlyExport.Text = SignerAddress.Text = TaprootSignerAddress.Text = "";
     }
 
     private void BackupConfirmationChanged(object? sender, RoutedEventArgs args) =>
