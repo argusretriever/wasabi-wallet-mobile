@@ -56,8 +56,8 @@ internal sealed class TestnetPaymentDraft(TestnetPaymentReview review, PSBT psbt
         if (candidate.GetGlobalTransaction().GetHash() != OpenUnsignedPsbt().GetGlobalTransaction().GetHash())
             throw new InvalidOperationException("The signed PSBT does not match the reviewed payment.");
 
-        if (!candidate.IsAllFinalized())
-            candidate.Finalize();
+        if (!candidate.IsAllFinalized() && !candidate.TryFinalize(out _))
+            throw new InvalidOperationException("The PSBT is missing valid signatures.");
         var signed = candidate.ExtractTransaction();
         VerifyForBroadcast(signed, coins);
         return signed;

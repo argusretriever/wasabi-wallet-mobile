@@ -151,23 +151,37 @@ public class MobileWalletPaymentTests
     [Fact]
     public void ImportsExternalSignatureOnlyForTheReviewedPayment()
     {
-        var (manager, coins, transactions) = FundedWallet(inputType: ScriptPubKeyType.Segwit);
-        var address = Address(Network.TestNet4);
-        var draft = TestnetPaymentBuilder.BuildDraft(manager, coins, transactions,
+        var network = Network.TestNet4;
+        var (signer, coins, transactions) = FundedWallet();
+        var watchOnly = KeyManager.CreateNewHardwareWalletWatchOnly(
+            signer.MasterFingerprint!.Value, signer.SegwitExtPubKey, null, null, null, network);
+        var address = Address(network);
+        var draft = TestnetPaymentBuilder.BuildDraft(watchOnly, coins, transactions,
             TestnetPaymentRequest.Parse(address, "0.00003", "1"));
-        var other = TestnetPaymentBuilder.BuildDraft(manager, coins, transactions,
+        var other = TestnetPaymentBuilder.BuildDraft(watchOnly, coins, transactions,
             TestnetPaymentRequest.Parse(address, "0.00004", "1"));
         Assert.Throws<InvalidOperationException>(() =>
             draft.ImportSignedPsbt(other.OpenUnsignedPsbt().ToBase64(), coins));
 
-        var response = draft.OpenUnsignedPsbt();
+        Assert.Throws<InvalidOperationException>(() => draft.Sign(watchOnly, coins, ""));
+        var response = PSBT.Parse(draft.OpenUnsignedPsbt().ToBase64(), network);
+        Assert.Throws<FormatException>(() => draft.ImportSignedPsbt("not base64!", coins));
+        Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(response.ToBase64(), coins));
         var input = coins.Single();
-        Network.TestNet4.CreateTransactionBuilder()
+        network.CreateTransactionBuilder()
             .AddCoins(input.Coin)
-            .AddKeys(manager.GetSecrets("recovery passphrase", input.ScriptPubKey).ToArray())
+            .AddKeys(signer.GetSecrets("recovery passphrase", input.ScriptPubKey).ToArray())
             .SignPSBT(response);
         var signed = draft.ImportSignedPsbt(response.ToBase64(), coins);
-        Assert.Equal(draft.Sign(manager, coins, "recovery passphrase").GetWitHash(), signed.GetWitHash());
+        Assert.Equal(draft.Sign(signer, coins, "recovery passphrase").GetWitHash(), signed.GetWitHash());
+        response.Finalize();
+        Assert.Equal(signed.GetWitHash(), draft.ImportSignedPsbt(response.ToBase64(), coins).GetWitHash());
+
+        var invalid = PSBT.Parse(response.ToBase64(), network);
+        var witness = Assert.Single(invalid.Inputs).FinalScriptWitness!;
+        using var wrongKey = new Key();
+        invalid.Inputs[0].FinalScriptWitness = new WitScript(new[] { witness[0], wrongKey.PubKey.ToBytes() });
+        Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(invalid.ToBase64(), coins));
 
         input.CoinJoinInProgress = true;
         Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(response.ToBase64(), coins));
