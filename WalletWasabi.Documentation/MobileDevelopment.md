@@ -41,10 +41,10 @@ Sync writes blockchain and transaction caches inside app storage, including publ
 For emulator development, a desktop Tor service can be forwarded to the emulator.
 
 ```powershell
-adb reverse tcp:9050 tcp:9050
+./Contrib/Start-MobileEmulatorTor.ps1
 ```
 
-This forwarding is a development setup. A physical phone needs its own local Tor SOCKS service. The app currently provides no bundled Tor runtime. Desktop update checks and the JSON RPC server are disabled for mobile sync. Debug builds emit sync diagnostics through the debugger, while release builds disable logging outputs.
+Run this from the repository root on Windows with the emulator running. If ADB is outside PATH, pass `-AdbPath` with its executable path. With multiple emulators, pass `-EmulatorSerial`. The script starts the bundled Windows desktop Tor or reuses an existing local SOCKS5 listener, then verifies port forwarding. Select **Start sync** in the wallet. Physical phones need their own Tor SOCKS service. Desktop update checks and the JSON RPC server are disabled for mobile sync. Debug builds emit sync diagnostics through the debugger, while release builds disable logging outputs.
 
 Android sets `UseNativeHttpHandler=false` so HTTP requests use .NET's SOCKS-capable handler. The native Java handler attempted HTTP CONNECT against the Tor SOCKS endpoint during emulator testing. The [dotnet runtime discussion](https://github.com/dotnet/runtime/issues/123050) documents this handler selection switch.
 
