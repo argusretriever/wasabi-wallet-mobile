@@ -76,6 +76,8 @@ dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -t:I
 
 Launch Wasabi Mobile Preview from the device launcher. APKs are under the Android project's bin directory.
 
+If the emulator's app crashes at startup after an incremental ADB install, reinstall the signed APK with `adb -s emulator-5558 install --no-incremental -r <path-to-signed-apk>`, substituting your emulator serial and APK path. This streams the full APK and preserves the emulator wallet data.
+
 ## iOS
 
 The iOS target requires a Mac, a compatible Xcode installation and the .NET iOS workload. Build the simulator target from that Mac.

@@ -180,9 +180,10 @@ public sealed class TestnetWalletSync
                 var blockHeaderHeight = global.GetBlockHeadersTipHeight();
                 var filterHeaderHeight = (uint)global.FilterHeaders.TipHeight;
                 var filterHeight = (uint)(global.FilterStore.GetTip()?.Header.Height ?? 0);
-                var synced = IsSynchronized(global.Status.IsTorRunning, connected, scanned, tip,
+                var torRunning = global.Status.IsTorRunning;
+                var synced = IsSynchronized(torRunning, connected, scanned, tip,
                     global.FilterHeaders.HashesLeft, startingWallet.IsCompletedSuccessfully);
-                var status = !global.Status.IsTorRunning ? "Tor disconnected. Waiting for reconnection."
+                var status = !torRunning ? "Tor disconnected. Waiting for reconnection."
                     : connected == 0 ? "Tor connected. Discovering Testnet4 peers…"
                     : synced ? "Synchronized through Tor"
                     : filterPeers == 0 && filterHeight < blockHeaderHeight ? "Waiting for a Testnet4 peer that serves compact filters…"

@@ -39,4 +39,18 @@ public class MobileWalletSyncTests
     {
         Assert.True(TestnetWalletSync.IsSynchronized(true, 3, 100, 100, 0, true));
     }
+
+    [Fact]
+    public void ReconnectingRequiresPeersAndAResumedScanBeforeReportingBalance()
+    {
+        const uint savedHeight = 100;
+        const uint newTip = 101;
+
+        Assert.False(TestnetWalletSync.IsSynchronized(false, 0, savedHeight, 0, 0, false));
+        Assert.True(TestnetWalletSync.IsSynchronized(true, 3, savedHeight, savedHeight, 0, true));
+        Assert.False(TestnetWalletSync.IsSynchronized(false, 3, savedHeight, savedHeight, 0, true));
+        Assert.False(TestnetWalletSync.IsSynchronized(true, 0, savedHeight, savedHeight, 0, true));
+        Assert.False(TestnetWalletSync.IsSynchronized(true, 3, savedHeight, newTip, 0, true));
+        Assert.True(TestnetWalletSync.IsSynchronized(true, 3, newTip, newTip, 0, true));
+    }
 }

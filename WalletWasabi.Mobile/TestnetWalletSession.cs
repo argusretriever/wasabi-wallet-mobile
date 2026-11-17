@@ -15,13 +15,14 @@ public sealed class TestnetWalletSession
     private TestnetWalletSession(KeyManager keyManager)
     {
         _keyManager = keyManager;
-        var receiveType = keyManager.TaprootExtPubKey is null ? ScriptPubKeyType.Segwit : ScriptPubKeyType.TaprootBIP86;
-        var key = _keyManager.GetNextReceiveKey(LabelsArray.Empty, receiveType);
+        ReceivingAddressType = keyManager.TaprootExtPubKey is null ? ScriptPubKeyType.Segwit : ScriptPubKeyType.TaprootBIP86;
+        var key = _keyManager.GetNextReceiveKey(LabelsArray.Empty, ReceivingAddressType);
         ReceivingAddress = key.GetAddress(Network.TestNet4).ToString();
         ReceivingKeyPath = key.FullKeyPath.ToString();
     }
 
     public string ReceivingAddress { get; }
+    public ScriptPubKeyType ReceivingAddressType { get; }
     public string ReceivingKeyPath { get; }
     public string Fingerprint => _keyManager.MasterFingerprint?.ToString() ?? "";
     public bool IsWatchOnly => _keyManager.IsWatchOnly;

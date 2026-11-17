@@ -92,6 +92,7 @@ public class MobileWalletSessionTests
             ? taproot.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.TaprootBIP86, network).ToString()
             : null;
         var address = taprootAddress ?? segwitAddress;
+        var addressType = includeTaproot ? ScriptPubKeyType.TaprootBIP86 : ScriptPubKeyType.Segwit;
         var export = new System.Collections.Generic.Dictionary<string, object>
         {
             ["version"] = 1,
@@ -106,10 +107,12 @@ public class MobileWalletSessionTests
         var session = TestnetWalletSession.ImportWatchOnly(json, segwitAddress, taprootAddress);
         Assert.True(session.IsWatchOnly);
         Assert.Equal(address, session.ReceivingAddress);
+        Assert.Equal(addressType, session.ReceivingAddressType);
         Assert.Null(session.KeyManager.EncryptedSecret);
         var restored = TestnetWalletSession.RestoreProtected(session.ExportEncryptedWallet());
         Assert.True(restored.IsWatchOnly);
         Assert.Equal(address, restored.ReceivingAddress);
+        Assert.Equal(addressType, restored.ReceivingAddressType);
 
         var wrongAddress = segwit.Derive(0).Derive(1).PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
         Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, wrongAddress, taprootAddress));

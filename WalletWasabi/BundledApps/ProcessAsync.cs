@@ -44,6 +44,8 @@ public class ProcessAsync : IDisposable
 
 	/// <inheritdoc cref="Process.StandardOutput"/>
 	public StreamReader StandardOutput => _process.StandardOutput;
+	/// <inheritdoc cref="Process.StandardError"/>
+	public StreamReader StandardError => _process.StandardError;
 
 	public void Start()
 	{

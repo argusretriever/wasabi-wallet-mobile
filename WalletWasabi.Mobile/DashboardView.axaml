@@ -76,7 +76,7 @@
           <TextBlock Text="Receive testnet bitcoin" FontSize="18" FontWeight="SemiBold" />
           <SelectableTextBlock x:Name="AddressDisplay" FontSize="16" TextWrapping="Wrap"
                                AutomationProperties.Name="Testnet receiving address" />
-          <TextBlock Classes="caption" Text="TAPROOT · FIRST RECEIVING ADDRESS" TextWrapping="Wrap" />
+          <TextBlock x:Name="AddressCaption" Classes="caption" TextWrapping="Wrap" />
           <TextBlock x:Name="DerivationDisplay" Classes="caption" TextWrapping="Wrap" />
           <TextBlock x:Name="FingerprintDisplay" Classes="caption" TextWrapping="Wrap" />
         </StackPanel>

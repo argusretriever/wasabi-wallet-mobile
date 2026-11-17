@@ -33,6 +33,8 @@ public partial class DashboardView : UserControl
         _initializing = false;
         _session = session;
         _closeWallet = closeWallet;
+        var addressType = session.ReceivingAddressType == NBitcoin.ScriptPubKeyType.TaprootBIP86 ? "TAPROOT" : "SEGWIT";
+        AddressCaption.Text = $"{addressType} · RECEIVING ADDRESS";
         AddressDisplay.Text = session.ReceivingAddress;
         DerivationDisplay.Text = $"Key path {session.ReceivingKeyPath}";
         FingerprintDisplay.Text = $"Master fingerprint {session.Fingerprint}";
