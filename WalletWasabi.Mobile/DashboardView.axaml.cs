@@ -33,9 +33,12 @@ public partial class DashboardView : UserControl
         _initializing = false;
         _session = session;
         _closeWallet = closeWallet;
+        var addressType = session.ReceivingAddressType == NBitcoin.ScriptPubKeyType.TaprootBIP86 ? "TAPROOT" : "SEGWIT";
+        AddressCaption.Text = $"{addressType} · RECEIVING ADDRESS";
         AddressDisplay.Text = session.ReceivingAddress;
         DerivationDisplay.Text = $"Key path {session.ReceivingKeyPath}";
         FingerprintDisplay.Text = $"Master fingerprint {session.Fingerprint}";
+        LocalSigningHint.IsVisible = SigningPassphrase.IsVisible = SignPaymentButton.IsVisible = !session.IsWatchOnly;
     }
 
     private void ShowSendStatus(object? sender, RoutedEventArgs args)
@@ -138,6 +141,10 @@ public partial class DashboardView : UserControl
         BroadcastPanel.IsVisible = false;
         BroadcastConsent.IsChecked = false;
         SigningPassphrase.Text = "";
+        UnsignedPsbtText.Text = "";
+        UnsignedPsbtText.IsVisible = false;
+        PsbtExportStatus.Text = "";
+        SignedPsbtInput.Text = "";
         SigningResult.Text = "";
         SignPaymentButton.IsEnabled = true;
         PaymentReviewPanel.IsVisible = false;
@@ -220,6 +227,7 @@ public partial class DashboardView : UserControl
             {
                 _signedPayment = signed;
                 SigningResult.Text = $"Signed locally.\nTransaction ID: {_signedPayment.GetHash()}";
+                BroadcastConsent.IsChecked = false;
                 BroadcastPanel.IsVisible = true;
             }
         }
@@ -240,9 +248,72 @@ public partial class DashboardView : UserControl
         }
     }
 
+    private void ShowUnsignedPsbt(object? sender, RoutedEventArgs args)
+    {
+        if (_paymentDraft is not { } draft) return;
+        UnsignedPsbtText.Text = draft.OpenUnsignedPsbt().ToBase64();
+        UnsignedPsbtText.IsVisible = true;
+    }
+
+    private async void CopyUnsignedPsbt(object? sender, RoutedEventArgs args)
+    {
+        if (_paymentDraft is not { } draft) return;
+        if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
+            PsbtExportStatus.Text = "Clipboard unavailable. Use Show unsigned PSBT to select the text.";
+            return;
+        }
+
+        try
+        {
+            await clipboard.SetTextAsync(draft.OpenUnsignedPsbt().ToBase64());
+            if (ReferenceEquals(_paymentDraft, draft))
+                PsbtExportStatus.Text = "Unsigned PSBT copied.";
+        }
+        catch (Exception)
+        {
+            if (ReferenceEquals(_paymentDraft, draft))
+                PsbtExportStatus.Text = "Could not copy. Use Show unsigned PSBT to select the text.";
+        }
+    }
+
+    private async void ImportSignedPsbt(object? sender, RoutedEventArgs args)
+    {
+        if (_paymentCancellation is not null || _broadcasting || _signedPayment is not null ||
+            _paymentDraft is not { } draft || _sync is not { } sync) return;
+        var encoded = SignedPsbtInput.Text ?? "";
+        if (string.IsNullOrWhiteSpace(encoded))
+        {
+            SigningResult.Text = "Paste the signed PSBT from your signer.";
+            return;
+        }
+
+        using var cancellation = new CancellationTokenSource();
+        _paymentCancellation = cancellation;
+        SigningResult.Text = "Verifying the signed PSBT…";
+        try
+        {
+            var signed = await sync.ImportSignedPsbtAsync(draft, encoded, cancellation.Token);
+            if (cancellation.IsCancellationRequested || !ReferenceEquals(_paymentDraft, draft)) return;
+            _signedPayment = signed;
+            SignedPsbtInput.Text = "";
+            SignPaymentButton.IsEnabled = false;
+            SigningResult.Text = $"External signature verified.\nTransaction ID: {signed.GetHash()}";
+            BroadcastConsent.IsChecked = false;
+            BroadcastPanel.IsVisible = true;
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        catch (Exception)
+        {
+            if (!cancellation.IsCancellationRequested)
+                SigningResult.Text = "Could not verify the signed PSBT. Check sync and use the signed PSBT for this review.";
+        }
+        finally { _paymentCancellation = null; }
+    }
+
     private async void BroadcastPayment(object? sender, RoutedEventArgs args)
     {
-        if (_broadcasting || BroadcastConsent.IsChecked != true || _paymentDraft is not { } draft ||
+        if (_broadcasting || !BroadcastPanel.IsVisible || BroadcastConsent.IsChecked != true || _paymentDraft is not { } draft ||
             _signedPayment is not { } signed || _sync is not { } sync ||
             _syncCancellation is not { IsCancellationRequested: false } cancellation) return;
 

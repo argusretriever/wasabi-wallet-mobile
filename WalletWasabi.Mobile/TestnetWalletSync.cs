@@ -68,6 +68,23 @@ public sealed class TestnetWalletSync
         }
         finally { _walletGate.Release(); }
     }
+    internal async Task<NBitcoin.Transaction> ImportSignedPsbtAsync(TestnetPaymentDraft draft, string encoded, CancellationToken token)
+    {
+        await _walletGate.WaitAsync(token);
+        try
+        {
+            if (_wallet is not { } wallet || _isReady?.Invoke() != true)
+                throw new InvalidOperationException("Complete synchronization before importing a signed PSBT.");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _runCancellation);
+            var signed = await Task.Run(() => draft.ImportSignedPsbt(encoded, wallet.Coins), linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            if (_isReady?.Invoke() != true)
+                throw new InvalidOperationException("Sync changed. Build a new review before importing.");
+            return signed;
+        }
+        finally { _walletGate.Release(); }
+    }
+
     internal async Task BroadcastPaymentAsync(TestnetPaymentDraft draft, NBitcoin.Transaction signed, CancellationToken token)
     {
         await _walletGate.WaitAsync(token);
@@ -122,15 +139,22 @@ public sealed class TestnetWalletSync
         try
         {
             Directory.CreateDirectory(dataDirectory);
-            progress.Report(new("Connecting to Tor on 127.0.0.1:9050…", 0, 0, 0, null, []));
+            progress.Report(new("Checking local Tor on 127.0.0.1:9050…", 0, 0, 0, null, []));
             global = new Global(dataDirectory, config);
             using var added = global.EventBus.Subscribe<P2pNodeAdded>(e =>
                 peers[e.EndPoint] = ((uint)Math.Max(0, e.Node.PeerVersion.StartHeight), e.Node.SupportsCompactFilters));
             using var removed = global.EventBus.Subscribe<P2pNodeRemoved>(e => peers.TryRemove(e.EndPoint, out _));
             var wallet = global.WalletManager.AddWallet(session.KeyManager);
-            await global.InitializeAsync(false,
-                new TerminateService(() => Task.CompletedTask, () => { }),
-                cancellationToken, checkForUpdates: false).ConfigureAwait(false);
+            using (global.EventBus.Subscribe<TorConnectionStateChanged>(state =>
+                progress.Report(new(state.IsTorRunning
+                    ? "Local Tor is responding. Starting Testnet4 sync…"
+                    : "Local Tor is not responding on port 9050. Check that your Tor service is running. Retrying…",
+                    0, 0, 0, null, []))))
+            {
+                await global.InitializeAsync(false,
+                    new TerminateService(() => Task.CompletedTask, () => { }),
+                    cancellationToken, checkForUpdates: false).ConfigureAwait(false);
+            }
 
             var startingWallet = global.WalletManager.StartWalletAsync(wallet);
             _runCancellation = cancellationToken;
@@ -156,9 +180,10 @@ public sealed class TestnetWalletSync
                 var blockHeaderHeight = global.GetBlockHeadersTipHeight();
                 var filterHeaderHeight = (uint)global.FilterHeaders.TipHeight;
                 var filterHeight = (uint)(global.FilterStore.GetTip()?.Header.Height ?? 0);
-                var synced = IsSynchronized(global.Status.IsTorRunning, connected, scanned, tip,
+                var torRunning = global.Status.IsTorRunning;
+                var synced = IsSynchronized(torRunning, connected, scanned, tip,
                     global.FilterHeaders.HashesLeft, startingWallet.IsCompletedSuccessfully);
-                var status = !global.Status.IsTorRunning ? "Tor disconnected. Waiting for reconnection."
+                var status = !torRunning ? "Tor disconnected. Waiting for reconnection."
                     : connected == 0 ? "Tor connected. Discovering Testnet4 peers…"
                     : synced ? "Synchronized through Tor"
                     : filterPeers == 0 && filterHeight < blockHeaderHeight ? "Waiting for a Testnet4 peer that serves compact filters…"

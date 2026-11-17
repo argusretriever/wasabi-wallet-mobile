@@ -121,6 +121,94 @@ public class MobileWalletPaymentTests
     }
 
     [Fact]
+    public void WatchOnlyExportIncludesInputAndChangeOrigins()
+    {
+        var network = Network.TestNet4;
+        var (signer, coins, transactions) = FundedWallet();
+        var fingerprint = signer.MasterFingerprint!.Value;
+        var watchOnly = KeyManager.CreateNewHardwareWalletWatchOnly(
+            fingerprint, signer.SegwitExtPubKey, null, null, null, network);
+        var request = TestnetPaymentRequest.Parse(Address(network), "0.00003", "1");
+        var draft = TestnetPaymentBuilder.BuildDraft(watchOnly, coins, transactions, request);
+        var export = PSBT.Parse(draft.OpenUnsignedPsbt().ToBase64(), network);
+        var payment = export.GetGlobalTransaction();
+        var input = coins.Single();
+        var exportedInput = Assert.Single(export.Inputs);
+        var origin = Assert.Single(exportedInput.HDKeyPaths);
+        Assert.Equal(new RootedKeyPath(fingerprint, input.HdPubKey.FullKeyPath), origin.Value);
+        Assert.Equal(input.ScriptPubKey, exportedInput.WitnessUtxo!.ScriptPubKey);
+        Assert.Equal(0, Assert.Single(payment.Inputs).WitScript.PushCount);
+        Assert.Contains(payment.Outputs, output =>
+            output.ScriptPubKey == request.Destination.ScriptPubKey && output.Value == request.Amount);
+        var change = Assert.Single(draft.Review.Change);
+        var changeScript = BitcoinAddress.Create(change.Address, network).ScriptPubKey;
+        var changeOutput = Assert.Single(export.Outputs, output => output.ScriptPubKey == changeScript);
+        var changeOrigin = Assert.Single(changeOutput.HDKeyPaths);
+        Assert.Equal(new RootedKeyPath(fingerprint, watchOnly.SegwitAccountKeyPath.Derive(1).Derive(0)), changeOrigin.Value);
+        Assert.Equal(input.Amount.Satoshi, payment.TotalOut.Satoshi + draft.Review.FeeSatoshis);
+    }
+
+    [Theory]
+    [InlineData(ScriptPubKeyType.Segwit)]
+    [InlineData(ScriptPubKeyType.TaprootBIP86)]
+    public void ImportsExternalSignatureOnlyForTheReviewedPayment(ScriptPubKeyType inputType)
+    {
+        var network = Network.TestNet4;
+        var (signer, coins, transactions) = FundedWallet(inputType: inputType);
+        var input = coins.Single();
+        var accountData = new Dictionary<string, object>
+        {
+            ["version"] = 1,
+            ["network"] = "testnet4",
+            ["masterFingerprint"] = signer.MasterFingerprint!.Value.ToString(),
+            ["segwitAccountXpub"] = signer.SegwitExtPubKey.GetWif(network).ToString()
+        };
+        var segwitAddress = signer.SegwitExtPubKey.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.Segwit, network);
+        string? taprootAddress = null;
+        if (inputType == ScriptPubKeyType.TaprootBIP86)
+        {
+            accountData["taprootAccountXpub"] = signer.TaprootExtPubKey!.GetWif(network).ToString();
+            taprootAddress = input.HdPubKey.GetAddress(network).ToString();
+        }
+        var export = System.Text.Json.JsonSerializer.Serialize(accountData);
+        var imported = TestnetWalletSession.ImportWatchOnly(export, segwitAddress.ToString(), taprootAddress);
+        var watchOnly = TestnetWalletSession.RestoreProtected(imported.ExportEncryptedWallet()).KeyManager;
+        Assert.True(watchOnly.IsWatchOnly);
+        var address = Address(network);
+        var draft = TestnetPaymentBuilder.BuildDraft(watchOnly, coins, transactions,
+            TestnetPaymentRequest.Parse(address, "0.00003", "1"));
+        var other = TestnetPaymentBuilder.BuildDraft(watchOnly, coins, transactions,
+            TestnetPaymentRequest.Parse(address, "0.00004", "1"));
+        Assert.Throws<InvalidOperationException>(() =>
+            draft.ImportSignedPsbt(other.OpenUnsignedPsbt().ToBase64(), coins));
+
+        Assert.Throws<InvalidOperationException>(() => draft.Sign(watchOnly, coins, ""));
+        var response = PSBT.Parse(draft.OpenUnsignedPsbt().ToBase64(), network);
+        Assert.Throws<FormatException>(() => draft.ImportSignedPsbt("not base64!", coins));
+        Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(response.ToBase64(), coins));
+        network.CreateTransactionBuilder()
+            .AddCoins(input.Coin)
+            .AddKeys(signer.GetSecrets("recovery passphrase", input.ScriptPubKey).ToArray())
+            .SignPSBT(response);
+        var signed = draft.ImportSignedPsbt(response.ToBase64(), coins);
+        draft.VerifyForBroadcast(signed, coins);
+        Assert.Equal(response.GetGlobalTransaction().GetHash(), signed.GetHash());
+        response.Finalize();
+        Assert.Equal(signed.GetWitHash(), draft.ImportSignedPsbt(response.ToBase64(), coins).GetWitHash());
+
+        var invalid = PSBT.Parse(response.ToBase64(), network);
+        var invalidInput = Assert.Single(invalid.Inputs);
+        var witness = invalidInput.FinalScriptWitness!;
+        var pushes = Enumerable.Range(0, witness.PushCount).Select(i => witness[i].ToArray()).ToArray();
+        pushes[0][0] ^= 1;
+        invalidInput.FinalScriptWitness = new WitScript(pushes);
+        Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(invalid.ToBase64(), coins));
+
+        input.CoinJoinInProgress = true;
+        Assert.Throws<InvalidOperationException>(() => draft.ImportSignedPsbt(response.ToBase64(), coins));
+    }
+
+    [Fact]
     public void RejectsInsufficientOrUnconfirmedFunds()
     {
         var (manager, coins, transactions) = FundedWallet();

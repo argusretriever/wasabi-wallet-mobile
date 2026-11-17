@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -20,6 +21,19 @@ public partial class WalletSetupView : UserControl
         InitializeComponent();
         _openWallet = openWallet;
         _store = store;
+        LocalPassword.TextChanged += UpdateLocalPasswordStrength;
+    }
+
+    private void UpdateLocalPasswordStrength(object? sender, TextChangedEventArgs args)
+    {
+        var password = LocalPassword.Text ?? "";
+        var distinctCharacters = password.Distinct().Count();
+        var rating = password.Length < 12 || distinctCharacters < 6 ? "Weak"
+            : password.Length >= 20 && distinctCharacters >= 10 ? "Very strong"
+            : "Strong";
+
+        LocalPasswordStrength.IsVisible = password.Length > 0;
+        LocalPasswordStrength.Text = password.Length > 0 ? $"Estimated strength: {rating}" : "";
     }
 
     private async void CreateWallet(object? sender, RoutedEventArgs args)
@@ -91,7 +105,39 @@ public partial class WalletSetupView : UserControl
         }
     }
 
-    private bool ValidatePassword()
+    private async void ImportWatchOnly(object? sender, RoutedEventArgs args)
+    {
+        if (!ValidateLocalPassword()) return;
+        var export = WatchOnlyExport.Text ?? "";
+        var address = SignerAddress.Text ?? "";
+        var taprootAddress = TaprootSignerAddress.Text;
+        var localPassword = LocalPassword.Text ?? "";
+        SetBusy(true);
+        try
+        {
+            var session = await Task.Run(() => TestnetWalletSession.ImportWatchOnly(export, address, taprootAddress));
+            if (!_active) return;
+            await _store.SaveNewAsync(session, localPassword);
+            if (!_active) return;
+            ClearInputs();
+            _openWallet(session);
+        }
+        catch (FormatException ex)
+        {
+            SetupStatus.Text = ex.Message;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            SetupStatus.Text = "Paste a valid watch-only JSON export.";
+        }
+        catch (Exception)
+        {
+            SetupStatus.Text = "Could not import or save the watch-only wallet.";
+        }
+        finally { SetBusy(false); }
+    }
+
+    private bool ValidateLocalPassword()
     {
         if (_busy) return false;
         if (string.IsNullOrWhiteSpace(LocalPassword.Text) || LocalPassword.Text.Length < 12 ||
@@ -100,6 +146,12 @@ public partial class WalletSetupView : UserControl
             SetupStatus.Text = "Use a local unlock password of at least 12 characters and confirm it exactly.";
             return false;
         }
+        return true;
+    }
+
+    private bool ValidatePassword()
+    {
+        if (!ValidateLocalPassword()) return false;
         if ((PasswordInput.Text ?? "") != (ConfirmInput.Text ?? ""))
         {
             SetupStatus.Text = "The passwords must match exactly.";
@@ -122,6 +174,7 @@ public partial class WalletSetupView : UserControl
         PasswordInput.Text = "";
         ConfirmInput.Text = "";
         LocalPassword.Text = LocalConfirm.Text = "";
+        WatchOnlyExport.Text = SignerAddress.Text = TaprootSignerAddress.Text = "";
     }
 
     private void BackupConfirmationChanged(object? sender, RoutedEventArgs args) =>

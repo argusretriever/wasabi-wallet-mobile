@@ -77,4 +77,49 @@ public class MobileWalletSessionTests
         var invalidWords = Words.Replace("about", "abandon", StringComparison.Ordinal);
         Assert.Throws<FormatException>(() => TestnetWalletSession.Recover(invalidWords, ""));
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void WatchOnlyImportMatchesSignerAndRestoresWithoutPrivateKeys(bool includeTaproot)
+    {
+        var network = Network.TestNet4;
+        var master = new Mnemonic(Words).DeriveExtKey("");
+        var segwit = master.Derive(new KeyPath("84'/1'/0'")).Neuter();
+        var taproot = master.Derive(new KeyPath("86'/1'/0'")).Neuter();
+        var segwitAddress = segwit.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+        var taprootAddress = includeTaproot
+            ? taproot.Derive(0).Derive(0).PubKey.GetAddress(ScriptPubKeyType.TaprootBIP86, network).ToString()
+            : null;
+        var address = taprootAddress ?? segwitAddress;
+        var addressType = includeTaproot ? ScriptPubKeyType.TaprootBIP86 : ScriptPubKeyType.Segwit;
+        var export = new System.Collections.Generic.Dictionary<string, object>
+        {
+            ["version"] = 1,
+            ["network"] = "testnet4",
+            ["masterFingerprint"] = master.PrivateKey.PubKey.GetHDFingerPrint().ToString(),
+            ["segwitAccountXpub"] = segwit.GetWif(network).ToString()
+        };
+        if (includeTaproot)
+            export["taprootAccountXpub"] = taproot.GetWif(network).ToString();
+        var json = System.Text.Json.JsonSerializer.Serialize(export);
+
+        var session = TestnetWalletSession.ImportWatchOnly(json, segwitAddress, taprootAddress);
+        Assert.True(session.IsWatchOnly);
+        Assert.Equal(address, session.ReceivingAddress);
+        Assert.Equal(addressType, session.ReceivingAddressType);
+        Assert.Null(session.KeyManager.EncryptedSecret);
+        var restored = TestnetWalletSession.RestoreProtected(session.ExportEncryptedWallet());
+        Assert.True(restored.IsWatchOnly);
+        Assert.Equal(address, restored.ReceivingAddress);
+        Assert.Equal(addressType, restored.ReceivingAddressType);
+
+        var wrongAddress = segwit.Derive(0).Derive(1).PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+        Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, wrongAddress, taprootAddress));
+        if (includeTaproot)
+        {
+            Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, segwitAddress));
+            Assert.Throws<FormatException>(() => TestnetWalletSession.ImportWatchOnly(json, segwitAddress, wrongAddress));
+        }
+    }
 }

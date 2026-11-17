@@ -60,6 +60,7 @@ public class BitcoindRpcProcessBridge
 		// Start bitcoind process.
 		Process = new ProcessAsync(ProcessStartInfoFactory.Make(processPath, args));
 		Process.Start();
+		var standardError = Process.StandardError.ReadToEndAsync(CancellationToken.None);
 
 		// Store PID in PID file.
 		await PidFile.WriteFileAsync(Process.Id).ConfigureAwait(false);
@@ -94,7 +95,9 @@ public class BitcoindRpcProcessBridge
 
 					if (Process is { } p && p.HasExited)
 					{
-						throw new BitcoindException($"Failed to start daemon, location: '{p.StartInfo.FileName} {p.StartInfo.Arguments}'", ex);
+						var error = (await standardError.ConfigureAwait(false)).Trim();
+						throw new BitcoindException(
+							$"Bitcoin Core exited with code {p.ExitCode} during startup at '{processPath}' (data directory '{dataDir}'). {error}", ex);
 					}
 				}
 

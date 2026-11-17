@@ -1,5 +1,23 @@
 # Mobile development
 
+## Watch-only import format
+
+In the mobile setup screen, enter a local unlock password and its confirmation, then paste the public wallet JSON and the first SegWit receiving address displayed by the signer. If the export includes Taproot, enter the first Taproot receiving address too. Select **Import watch-only wallet** to save it. The JSON object uses these fields:
+
+| Field | Value |
+| --- | --- |
+| `version` | Integer `1` |
+| `network` | String `testnet4` |
+| `masterFingerprint` | Eight hexadecimal digits in BIP32 display order |
+| `segwitAccountXpub` | Required Testnet extended public key (`tpub`) for `m/84'/1'/0'` |
+| `taprootAccountXpub` | Optional Testnet extended public key (`tpub`) for `m/86'/1'/0'` |
+
+The app derives receiving and change addresses on branches `/0/*` and `/1/*`. With only the SegWit key, it uses SegWit receiving addresses. Import must reject private keys, unsupported versions or networks, malformed fingerprints and keys that do not encode a depth-three account-zero child. Extended keys alone cannot prove the full derivation path, master fingerprint or specific test network. Confirm those details and the first receive address against the signer before funding.
+
+This format carries public wallet data only. The phone prepares the PSBT and the external signer holds the private keys. Import does not require a recovery phrase or hardware wallet PIN.
+
+For a wallet imported with both account keys in an earlier preview, verify both account keys and their first receiving addresses against the signer before using the wallet. The new checks run at import.
+
 The mobile UI is an early Testnet4 wallet build. It uses the upstream Wasabi logo, Wasabi's existing key manager and the repository's centrally pinned Avalonia packages. The desktop application retains its existing entry point.
 
 The shared setup screen creates a 12-word English BIP39 wallet or recovers an English BIP39 phrase with checksum validation. The exact password is also the BIP39 passphrase, matching Wasabi's desktop behavior. The dashboard displays the first Taproot receiving address, key path and fingerprint.
@@ -23,10 +41,12 @@ Sync writes blockchain and transaction caches inside app storage, including publ
 For emulator development, a desktop Tor service can be forwarded to the emulator.
 
 ```powershell
-adb reverse tcp:9050 tcp:9050
+./Contrib/Start-MobileEmulatorTor.ps1
 ```
 
-This forwarding is a development setup. A physical phone needs its own local Tor SOCKS service. The app currently provides no bundled Tor runtime. Desktop update checks and the JSON RPC server are disabled for mobile sync. Debug builds emit sync diagnostics through the debugger, while release builds disable logging outputs.
+Run this from the repository root on Windows with the emulator running. If ADB is outside PATH, pass `-AdbPath` with its executable path. With multiple emulators, pass `-EmulatorSerial`. The script starts the bundled Windows desktop Tor or reuses an existing local SOCKS5 listener, then verifies port forwarding. Select **Start sync** in the wallet. Physical phones need their own Tor SOCKS service. Desktop update checks and the JSON RPC server are disabled for mobile sync. Debug builds emit sync diagnostics through the debugger, while release builds disable logging outputs.
+
+Alternatively, install [Orbot from Guardian Project](https://orbot.app/en/download/) in the Android emulator. In Orbot, open **More → Orbot Settings → General** and enable **Power User Mode** to use its local proxy. Allow Orbot's notification and alarms permissions if prompted. If you previously used ADB forwarding, remove the emulator's `tcp:9050` reverse mapping before starting Orbot. Select **Connect** once and wait for **Connected**, then check that **More** shows SOCKS port **9050**. Open the wallet, unlock it if prompted, and select **Start sync**.
 
 Android sets `UseNativeHttpHandler=false` so HTTP requests use .NET's SOCKS-capable handler. The native Java handler attempted HTTP CONNECT against the Tor SOCKS endpoint during emulator testing. The [dotnet runtime discussion](https://github.com/dotnet/runtime/issues/123050) documents this handler selection switch.
 
@@ -40,6 +60,12 @@ dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -t:I
 dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -p:AndroidSdkDirectory=C:/dev/android-sdk -p:JavaSdkDirectory=C:/dev/jdk
 ```
 
+For a Release APK for an ARM64 phone, specify the Android runtime explicitly so restore selects the Android runtime packs:
+
+```powershell
+dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -c Release -r android-arm64 -p:AndroidSdkDirectory=C:/dev/android-sdk -p:JavaSdkDirectory=C:/dev/jdk -p:IncludeDesktopTools=false
+```
+
 Review and accept the required SDK licenses when prompted. Adjust the absolute SDK paths to match your machine. InstallAndroidDependencies can also accept licenses using AcceptAndroidSdkLicenses=True.
 
 To install a Debug APK on a connected Android device or a running emulator, use the same SDK arguments with the Install target.
@@ -49,6 +75,8 @@ dotnet build WalletWasabi.Mobile.Android/WalletWasabi.Mobile.Android.csproj -t:I
 ```
 
 Launch Wasabi Mobile Preview from the device launcher. APKs are under the Android project's bin directory.
+
+If the emulator's app crashes at startup after an incremental ADB install, reinstall the signed APK with `adb -s emulator-5558 install --no-incremental -r <path-to-signed-apk>`, substituting your emulator serial and APK path. This streams the full APK and preserves the emulator wallet data.
 
 ## iOS
 
@@ -127,7 +155,7 @@ Compatibility findings for this integration are as follows.
 - KeyManager creation, recovery and address derivation work on the Android 11 x86_64 emulator.
 - FilePath stays null, so the core KeyManager writes no wallet JSON file. The mobile storage service saves an authenticated encrypted envelope instead.
 - Synchronization uses an external Tor SOCKS service. Bundled mobile Tor and CoinJoin remain pending.
-- Android packaging warns that upstream WabiSabi 1.3.1 native libraries lack 16 KB page alignment. CoinJoin requires a compatible Android native dependency before release.
+- The Android Testnet4 preview excludes the desktop Linux WabiSabi native library selected by NuGet runtime fallback. Both APK architectures pass 16 KB ZIP and ELF alignment checks, and a clean x64 install launched on the Windows emulator with 16 KB pages. Enabling CoinJoin on Android requires a compatible native dependency.
 - Avalonia emits runtime-loader warnings for the two views with constructor parameters. The app constructs these views directly, and both paths were exercised on Android.
 - The iOS target has not been built on a Mac. Native libraries, trimming and lifecycle behavior need separate iOS verification.
 - Inspection aligned the iOS native SkiaSharp dependency with the shared managed version. NuGet's vulnerability query reported no known vulnerable packages in the Android project's resolved dependency graph at inspection time.

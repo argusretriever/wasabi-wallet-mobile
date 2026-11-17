@@ -1,4 +1,5 @@
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using NBitcoin;
@@ -8,33 +9,45 @@ namespace WalletWasabi.IntegrationTests.BitcoinCore.Endpointing;
 
 public static class PortFinder
 {
+	private static readonly HashSet<int> AllocatedPorts = [];
+
 	public static int[] GetRandomPorts(int num)
 	{
-		int[] portArray = new int[num];
-		var i = 0;
-		while (i < portArray.Length)
+		const int firstPort = 10000;
+		const int portCount = 4000;
+		var ports = new int[num];
+		var start = (int)(RandomUtils.GetUInt32() % portCount);
+		lock (AllocatedPorts)
 		{
-			var port = RandomUtils.GetUInt32() % 4000;
-			port += 10000;
-			if (portArray.Any(p => p == port))
+			var found = 0;
+			for (var offset = 0; offset < portCount && found < ports.Length; offset++)
 			{
-				continue;
+				var port = firstPort + (start + offset) % portCount;
+				if (AllocatedPorts.Contains(port))
+				{
+					continue;
+				}
+
+				try
+				{
+					using var listener = new TcpListener(IPAddress.Loopback, port);
+					listener.Start();
+					ports[found++] = port;
+				}
+				catch (SocketException ex)
+				{
+					Logger.LogTrace(ex);
+				}
 			}
 
-			try
+			if (found != ports.Length)
 			{
-				using var listener = new TcpListener(IPAddress.Loopback, (int)port);
-				listener.Start();
-				listener.Stop();
-				portArray[i] = (int)port;
-				i++;
+				throw new InvalidOperationException("Not enough unused Bitcoin Core test ports are available.");
 			}
-			catch (SocketException ex)
-			{
-				Logger.LogTrace(ex);
-			}
+
+			AllocatedPorts.UnionWith(ports);
 		}
 
-		return portArray;
+		return ports;
 	}
 }

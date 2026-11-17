@@ -45,9 +45,17 @@
               <TextBlock Text="Review unsigned payment" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
               <SelectableTextBlock x:Name="PaymentReviewText" TextWrapping="Wrap" FontSize="14" />
               <TextBlock Text="Confirm the recipient uses Testnet4. Testnet networks share address formats. Coin selection can link addresses." TextWrapping="Wrap" Foreground="#C7E99A" />
-              <TextBlock Text="Enter your original recovery passphrase to sign locally. Leave it blank if you recovered the wallet without one." TextWrapping="Wrap" />
+              <TextBlock x:Name="LocalSigningHint" Text="Enter your original recovery passphrase to sign locally. Leave it blank if you recovered the wallet without one." TextWrapping="Wrap" />
               <TextBox x:Name="SigningPassphrase" PasswordChar="●" TextInputOptions.IsSensitive="True" TextInputOptions.ShowSuggestions="False" TextInputOptions.AutoCapitalization="False" Watermark="Recovery passphrase" AutomationProperties.Name="Recovery passphrase" />
               <Button x:Name="SignPaymentButton" Classes="action" Content="Sign on this device" Click="SignPayment" />
+              <Button Classes="action" Content="Show unsigned PSBT" Click="ShowUnsignedPsbt" />
+              <Button Classes="action" Content="Copy unsigned PSBT" Click="CopyUnsignedPsbt" />
+              <TextBlock Classes="caption" Text="Share the PSBT only with your signer. It contains transaction and wallet details." TextWrapping="Wrap" />
+              <TextBlock x:Name="PsbtExportStatus" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+              <SelectableTextBlock x:Name="UnsignedPsbtText" TextWrapping="Wrap" IsVisible="False" />
+              <TextBox x:Name="SignedPsbtInput" Watermark="Paste signed PSBT (Base64)" TextWrapping="Wrap"
+                       MaxLength="3500000" AutomationProperties.Name="Signed PSBT" />
+              <Button Classes="action" Content="Import signed PSBT" Click="ImportSignedPsbt" />
               <SelectableTextBlock x:Name="SigningResult" TextWrapping="Wrap" />
               <StackPanel x:Name="BroadcastPanel" IsVisible="False" Spacing="8">
                 <CheckBox x:Name="BroadcastConsent">
@@ -68,7 +76,7 @@
           <TextBlock Text="Receive testnet bitcoin" FontSize="18" FontWeight="SemiBold" />
           <SelectableTextBlock x:Name="AddressDisplay" FontSize="16" TextWrapping="Wrap"
                                AutomationProperties.Name="Testnet receiving address" />
-          <TextBlock Classes="caption" Text="TAPROOT · FIRST RECEIVING ADDRESS" TextWrapping="Wrap" />
+          <TextBlock x:Name="AddressCaption" Classes="caption" TextWrapping="Wrap" />
           <TextBlock x:Name="DerivationDisplay" Classes="caption" TextWrapping="Wrap" />
           <TextBlock x:Name="FingerprintDisplay" Classes="caption" TextWrapping="Wrap" />
         </StackPanel>

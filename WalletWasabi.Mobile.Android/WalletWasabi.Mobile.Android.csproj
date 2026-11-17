@@ -17,4 +17,11 @@
     <ProjectReference Include="../WalletWasabi.Mobile/WalletWasabi.Mobile.csproj" />
     <AndroidResource Include="../Contrib/Assets/WasabiLogo256.png" Link="Resources/drawable/wasabi_logo.png" />
   </ItemGroup>
+  <!-- The Testnet4 Android preview has no CoinJoin coordinator. WabiSabi's
+       desktop Linux binary is selected by RID fallback and is not an Android library. -->
+  <Target Name="ExcludeDesktopWabiSabiNativeLibrary" BeforeTargets="_IncludeNativeSystemLibraries">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'libwabisabi.so'" />
+    </ItemGroup>
+  </Target>
 </Project>
