@@ -139,15 +139,22 @@ public sealed class TestnetWalletSync
         try
         {
             Directory.CreateDirectory(dataDirectory);
-            progress.Report(new("Connecting to Tor on 127.0.0.1:9050…", 0, 0, 0, null, []));
+            progress.Report(new("Checking local Tor on 127.0.0.1:9050…", 0, 0, 0, null, []));
             global = new Global(dataDirectory, config);
             using var added = global.EventBus.Subscribe<P2pNodeAdded>(e =>
                 peers[e.EndPoint] = ((uint)Math.Max(0, e.Node.PeerVersion.StartHeight), e.Node.SupportsCompactFilters));
             using var removed = global.EventBus.Subscribe<P2pNodeRemoved>(e => peers.TryRemove(e.EndPoint, out _));
             var wallet = global.WalletManager.AddWallet(session.KeyManager);
-            await global.InitializeAsync(false,
-                new TerminateService(() => Task.CompletedTask, () => { }),
-                cancellationToken, checkForUpdates: false).ConfigureAwait(false);
+            using (global.EventBus.Subscribe<TorConnectionStateChanged>(state =>
+                progress.Report(new(state.IsTorRunning
+                    ? "Local Tor is responding. Starting Testnet4 sync…"
+                    : "Local Tor is not responding on port 9050. Check that your Tor service is running. Retrying…",
+                    0, 0, 0, null, []))))
+            {
+                await global.InitializeAsync(false,
+                    new TerminateService(() => Task.CompletedTask, () => { }),
+                    cancellationToken, checkForUpdates: false).ConfigureAwait(false);
+            }
 
             var startingWallet = global.WalletManager.StartWalletAsync(wallet);
             _runCancellation = cancellationToken;

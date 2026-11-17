@@ -46,6 +46,8 @@ For emulator development, a desktop Tor service can be forwarded to the emulator
 
 Run this from the repository root on Windows with the emulator running. If ADB is outside PATH, pass `-AdbPath` with its executable path. With multiple emulators, pass `-EmulatorSerial`. The script starts the bundled Windows desktop Tor or reuses an existing local SOCKS5 listener, then verifies port forwarding. Select **Start sync** in the wallet. Physical phones need their own Tor SOCKS service. Desktop update checks and the JSON RPC server are disabled for mobile sync. Debug builds emit sync diagnostics through the debugger, while release builds disable logging outputs.
 
+Alternatively, install [Orbot from Guardian Project](https://orbot.app/en/download/) in the Android emulator. In Orbot, open **More → Orbot Settings → General** and enable **Power User Mode** to use its local proxy. Allow Orbot's notification and alarms permissions if prompted. If you previously used ADB forwarding, remove the emulator's `tcp:9050` reverse mapping before starting Orbot. Select **Connect** once and wait for **Connected**, then check that **More** shows SOCKS port **9050**. Open the wallet, unlock it if prompted, and select **Start sync**.
+
 Android sets `UseNativeHttpHandler=false` so HTTP requests use .NET's SOCKS-capable handler. The native Java handler attempted HTTP CONNECT against the Tor SOCKS endpoint during emulator testing. The [dotnet runtime discussion](https://github.com/dotnet/runtime/issues/123050) documents this handler selection switch.
 
 ## Android
