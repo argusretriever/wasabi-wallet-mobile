@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -9,6 +10,8 @@ using WalletWasabi.Helpers;
 using WalletWasabi.Services;
 using WalletWasabi.IntegrationTests.BitcoinCore;
 using WalletWasabi.IntegrationTests.BitcoinCore.Endpointing;
+using WalletWasabi.IntegrationTests.BitcoinCore.Processes;
+using WalletWasabi.Logging;
 
 namespace WalletWasabi.IntegrationTests.Infrastructure;
 
@@ -20,9 +23,20 @@ public static class TestNodeBuilder
 	{
 		var dataDir = Path.Combine(GetWorkDir(callerFilePath, callerMemberName), additionalFolder);
 		var mempoolService = new MempoolService(EventBus);
-		var nodeParameters = CreateDefaultCoreNodeParams(mempoolService, dataDir);
-
-		return await CoreNode.CreateAsync(nodeParameters, CancellationToken.None).ConfigureAwait(false);
+		const int maxAttempts = 3;
+		for (var attempt = 1; ; attempt++)
+		{
+			var nodeParameters = CreateDefaultCoreNodeParams(mempoolService, dataDir);
+			try
+			{
+				return await CoreNode.CreateAsync(nodeParameters, CancellationToken.None).ConfigureAwait(false);
+			}
+			catch (BitcoindException ex) when (attempt < maxAttempts &&
+				ex.Message.Contains("Unable to bind to 127.0.0.1:", StringComparison.Ordinal))
+			{
+				Logger.LogInfo($"Bitcoin Core could not bind a loopback port on attempt {attempt}. Retrying with fresh ports.");
+			}
+		}
 	}
 
 	private static CoreNodeParams CreateDefaultCoreNodeParams(MempoolService mempoolService, string dataDir)
