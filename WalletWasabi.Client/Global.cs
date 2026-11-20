@@ -872,8 +872,6 @@ public class Global
 					Logger.LogInfo("TorManager is stopped.");
 				}
 
-				_disposables.Dispose();
-				await _asyncDisposables.DisposeAsync().ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -881,7 +879,26 @@ public class Global
 			}
 			finally
 			{
-				Logger.LogTrace("Dispose finished.");
+				try
+				{
+					_disposables.Dispose();
+				}
+				catch (Exception ex)
+				{
+					Logger.LogWarning(ex);
+				}
+				finally
+				{
+					try
+					{
+						await _asyncDisposables.DisposeAsync().ConfigureAwait(false);
+					}
+					catch (Exception ex)
+					{
+						Logger.LogWarning(ex);
+					}
+					Logger.LogTrace("Dispose finished.");
+				}
 			}
 		}
 	}
